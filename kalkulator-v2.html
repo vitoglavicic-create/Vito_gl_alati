@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Najam vs. Kupnja — Kalkulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090a;
+  --surface:#0f1012;
+  --card:#141618;
+  --card2:#1a1c1f;
+  --border:#232528;
+  --border2:#2e3035;
+  --gold:#c8a96e;
+  --gold2:#e8cc9a;
+  --gold-dim:rgba(200,169,110,0.12);
+  --white:#ede9e0;
+  --muted:#6b6e75;
+  --muted2:#4a4d54;
+  --green:#52a87c;
+  --green-dim:rgba(82,168,124,0.1);
+  --red:#c05a5a;
+  --red-dim:rgba(192,90,90,0.1);
+  --blue:#5a8ac0;
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* GRAIN */
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:999;
+}
+
+/* GLOW BG */
+.glow{
+  position:fixed;
+  width:600px;height:600px;
+  border-radius:50%;
+  filter:blur(120px);
+  pointer-events:none;
+  z-index:0;
+}
+.glow-1{top:-200px;left:-200px;background:rgba(200,169,110,0.04)}
+.glow-2{bottom:-200px;right:-200px;background:rgba(82,168,124,0.03)}
+
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 20px}
+
+/* ═══ GATE ═══ */
+#gate{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:60px 20px;
+  animation:fadeUp .7s ease both;
+}
+.gate-inner{width:100%;max-width:520px;text-align:center}
+
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gold);border:1px solid rgba(200,169,110,0.3);
+  padding:7px 18px;border-radius:100px;margin-bottom:36px;
+  font-weight:500;
+}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+
+.gate-h{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(42px,8vw,72px);
+  font-weight:700;line-height:.95;
+  letter-spacing:-2px;margin-bottom:24px;
+}
+.gate-h em{color:var(--gold);font-style:normal}
+
+.gate-sub{
+  font-size:15px;color:var(--muted);line-height:1.75;
+  max-width:380px;margin:0 auto 44px;
+}
+
+.promises{
+  display:flex;flex-direction:column;gap:10px;
+  text-align:left;margin-bottom:36px;
+}
+.promise{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;
+  font-size:13.5px;color:var(--muted);line-height:1.5;
+}
+.promise-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+
+.gate-form{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:32px 28px;text-align:left;
+}
+.gate-form-title{font-size:17px;font-weight:500;margin-bottom:4px}
+.gate-form-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.fg{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.fg label{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.fg input{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:9px;padding:13px 15px;
+  font-size:14px;color:var(--white);
+  font-family:'Outfit',sans-serif;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.fg input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,169,110,0.08)}
+.fg input::placeholder{color:var(--muted2)}
+
+.btn-gold{
+  width:100%;background:var(--gold);color:#0a0805;
+  border:none;border-radius:10px;padding:15px;
+  font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;
+  cursor:pointer;transition:background .2s,transform .1s;
+  letter-spacing:.2px;margin-top:4px;
+}
+.btn-gold:hover{background:var(--gold2)}
+.btn-gold:active{transform:scale(.99)}
+
+.privacy{text-align:center;font-size:12px;color:var(--muted2);margin-top:12px}
+
+/* ═══ STEPS ═══ */
+#calc-screen{display:none;padding:48px 0 80px;animation:fadeUp .5s ease both}
+
+.progress-bar{
+  display:flex;align-items:center;gap:0;
+  margin-bottom:44px;
+}
+.step-item{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  flex:1;position:relative;
+}
+.step-item:not(:last-child)::after{
+  content:'';position:absolute;
+  top:15px;left:calc(50% + 15px);
+  width:calc(100% - 30px);height:1px;
+  background:var(--border2);transition:background .4s;
+}
+.step-item.done:not(:last-child)::after{background:var(--gold)}
+.step-num{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;
+  background:var(--card);border:1px solid var(--border2);
+  color:var(--muted);transition:all .3s;
+}
+.step-item.active .step-num{background:var(--gold);border-color:var(--gold);color:#0a0805}
+.step-item.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.step-item.active .step-label{color:var(--gold)}
+
+/* STEP PANELS */
+.step-panel{display:none;animation:fadeUp .4s ease both}
+.step-panel.active{display:block}
+
+.step-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(26px,5vw,38px);font-weight:700;
+  line-height:1.1;letter-spacing:-.5px;margin-bottom:8px;
+}
+.step-title em{color:var(--gold);font-style:normal}
+.step-desc{font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:24px;margin-bottom:14px;
+}
+
+/* LOCATION GRID */
+.loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.loc-btn{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:16px 14px;cursor:pointer;
+  text-align:left;transition:all .2s;
+  font-family:'Outfit',sans-serif;
+}
+.loc-btn:hover{border-color:var(--border2)}
+.loc-btn.active{background:var(--gold-dim);border-color:var(--gold)}
+.loc-btn-name{font-size:14px;font-weight:500;color:var(--white);margin-bottom:3px}
+.loc-btn-price{font-size:12px;color:var(--muted)}
+.loc-btn-badge{
+  display:inline-block;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:2px 7px;border-radius:4px;
+  margin-top:6px;font-weight:500;
+}
+.hot{background:rgba(200,169,110,0.15);color:var(--gold)}
+.stable{background:rgba(82,168,124,0.15);color:var(--green)}
+
+/* SLIDERS */
+.slider-field{margin-bottom:24px}
+.slider-field:last-child{margin-bottom:0}
+.slider-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.slider-label{font-size:13px;color:var(--muted)}
+.slider-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;font-weight:700;color:var(--gold);
+}
+.slider-sub{font-size:11px;color:var(--muted2);margin-top:2px}
+
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:2px;
+  background:var(--border2);border-radius:1px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--gold);cursor:pointer;
+  border:3px solid var(--bg);box-shadow:0 0 0 1px var(--gold);
+  transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.1)}
+
+/* SCENARIO TABS */
+.scenario-tabs{display:flex;gap:8px;margin-bottom:20px}
+.sc-tab{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:10px;text-align:center;cursor:pointer;
+  transition:all .2s;font-family:'Outfit',sans-serif;
+}
+.sc-tab:hover{border-color:var(--border2)}
+.sc-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.sc-tab-name{font-size:12px;font-weight:500}
+.sc-tab-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.sc-tab.active .sc-tab-sub{color:rgba(200,169,110,0.7)}
+
+/* NAV BTNS */
+.nav-row{display:flex;gap:12px;margin-top:24px}
+.btn-outline{
+  flex:1;background:transparent;color:var(--gold);
+  border:1px solid var(--border2);border-radius:10px;
+  padding:14px;font-size:14px;font-weight:500;
+  font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;
+}
+.btn-outline:hover{border-color:var(--gold)}
+.btn-next{
+  flex:2;background:var(--gold);color:#0a0805;
+  border:none;border-radius:10px;padding:14px;
+  font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;
+  cursor:pointer;transition:background .2s;
+}
+.btn-next:hover{background:var(--gold2)}
+
+/* ═══ RESULTS ═══ */
+#results{display:none;animation:fadeUp .5s ease both}
+
+/* EMOTIONAL BANNER */
+.emotion-banner{
+  border-radius:var(--r);padding:28px 24px;
+  margin-bottom:14px;position:relative;overflow:hidden;
+}
+.emotion-banner::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,255,255,0.02));
+}
+.emotion-banner.buy{background:linear-gradient(135deg,#0d1f12,#0a1a0e);border:1px solid rgba(82,168,124,0.3)}
+.emotion-banner.rent{background:linear-gradient(135deg,#1f0d0d,#1a0a0a);border:1px solid rgba(192,90,90,0.3)}
+.emotion-banner.neutral{background:linear-gradient(135deg,#1a1508,#120f04);border:1px solid rgba(200,169,110,0.3)}
+
+.emotion-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.emotion-icon{font-size:44px}
+.emotion-verdict{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;font-weight:500}
+.emotion-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(22px,4vw,30px);font-weight:700;line-height:1.1;
+}
+.emotion-banner.buy .emotion-title{color:var(--green)}
+.emotion-banner.rent .emotion-title{color:var(--red)}
+.emotion-banner.neutral .emotion-title{color:var(--gold)}
+
+.emotion-sentence{
+  font-size:14px;color:var(--muted);line-height:1.7;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.emotion-sentence strong{color:var(--white);font-weight:500}
+
+/* KEY NUMBERS */
+.key-nums{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.key-num{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:18px 16px;
+}
+.kn-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500}
+.kn-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:700;line-height:1;
+}
+.kn-val.gold{color:var(--gold)}
+.kn-val.green{color:var(--green)}
+.kn-val.red{color:var(--red)}
+.kn-val.white{color:var(--white)}
+.kn-sub{font-size:11px;color:var(--muted2);margin-top:5px}
+
+/* FUTURE VALUE HIGHLIGHT */
+.future-highlight{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--gold);border-radius:var(--r);
+  padding:20px 22px;margin-bottom:14px;
+  display:flex;align-items:center;gap:16px;
+}
+.fh-icon{font-size:32px}
+.fh-text{}
+.fh-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:4px;font-weight:500}
+.fh-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px;font-weight:700;color:var(--white);
+}
+.fh-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* BREAKDOWN */
+.breakdown-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;margin-bottom:14px;
+}
+.bc-title{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:18px;font-weight:500;
+}
+.bc-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--border);
+  font-size:13.5px;
+}
+.bc-row:last-child{border:none;padding-top:14px;margin-top:2px}
+.bc-row:last-child .bc-label{font-weight:500;color:var(--white)}
+.bc-label{color:var(--muted)}
+.bc-val{font-weight:500}
+.bc-val.r{color:var(--red)}
+.bc-val.g{color:var(--green)}
+.bc-val.w{color:var(--white)}
+
+/* CHART */
+.chart-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;margin-bottom:14px;
+}
+.chart-head{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:20px;flex-wrap:wrap;gap:12px;
+}
+.chart-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500}
+.chart-legend{display:flex;gap:16px}
+.leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+
+/* COMPARISON TABLE */
+.compare-table{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-bottom:14px;
+}
+.compare-header{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:var(--surface);padding:12px 16px;
+  font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);
+}
+.compare-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  font-size:13px;align-items:center;
+}
+.compare-row:last-child{border:none}
+.compare-row:nth-child(even){background:rgba(255,255,255,0.01)}
+.cr-label{color:var(--muted)}
+.cr-val{font-weight:500}
+
+/* SHARE */
+.share-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px 22px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;
+}
+.share-text{font-size:13px;color:var(--muted);line-height:1.5}
+.share-text strong{color:var(--white);font-weight:500}
+.share-btns{display:flex;gap:8px;flex-shrink:0}
+.share-btn{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:8px;padding:9px 14px;font-size:12px;
+  font-family:'Outfit',sans-serif;color:var(--white);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.share-btn:hover{border-color:var(--gold);color:var(--gold)}
+.share-btn.wa{background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.3);color:#25d366}
+.share-btn.wa:hover{background:rgba(37,211,102,0.15)}
+
+.recalc{
+  width:100%;background:transparent;color:var(--muted);
+  border:1px solid var(--border);border-radius:10px;
+  padding:14px;font-size:13px;font-family:'Outfit',sans-serif;
+  cursor:pointer;transition:all .2s;margin-bottom:40px;
+}
+.recalc:hover{border-color:var(--border2);color:var(--white)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:100px;padding:12px 20px;font-size:13px;
+  color:var(--white);z-index:1000;transition:transform .3s ease;
+  white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulse{
+  0%,100%{opacity:1}50%{opacity:.4}
+}
+
+/* MOBILE */
+@media(max-width:480px){
+  .field-row{grid-template-columns:1fr}
+  .key-nums{grid-template-columns:1fr}
+  .loc-grid{grid-template-columns:1fr 1fr}
+  .gate-form{padding:24px 18px}
+  .future-highlight{flex-direction:column;gap:10px}
+  .share-card{flex-direction:column}
+  .share-btns{width:100%}
+  .share-btn{flex:1;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- ═══ GATE ═══ -->
+<div id="gate">
+  <div class="wrap">
+    <div class="gate-inner">
+      <div class="badge"><span class="badge-dot"></span> Besplatni alat · Zagreb & Istra</div>
+
+      <h1 class="gate-h">Najam ili<br><em>kupnja?</em></h1>
+
+      <p class="gate-sub">Za 2 minute saznaj što je financijski pametnije — na temelju stvarnih tržišnih podataka za Hrvatsku.</p>
+
+      <div class="promises">
+        <div class="promise">
+          <div class="promise-icon">📊</div>
+          <div>Break-even analiza — točno kada ti se kupnja počne isplatiti</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">🏠</div>
+          <div>Koliko će tvoja nekretnina vrijediti za 10 godina</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">💸</div>
+          <div>Svi skriveni troškovi kupnje koje banke ne govore</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">⚖️</div>
+          <div>Usporedba 3 scenarija: optimistično, realno, konzervativno</div>
+        </div>
+      </div>
+
+      <div class="gate-form">
+        <div class="gate-form-title">Dobij pristup kalkulatoru</div>
+        <div class="gate-form-sub">Unesi podatke — odmah otvara pristup. Bez spama.</div>
+
+        <div class="field-row">
+          <div class="fg">
+            <label>Ime</label>
+            <input type="text" id="g-name" placeholder="Tvoje ime" autocomplete="given-name">
+          </div>
+          <div class="fg">
+            <label>Email</label>
+            <input type="email" id="g-email" placeholder="tvoj@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <button class="btn-gold" onclick="unlock()">Otvori besplatni kalkulator →</button>
+        <div class="privacy">🔒 Nema dijeljenja podataka. Odjava kada želiš.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CALCULATOR ═══ -->
+<div id="calc-screen">
+  <div class="wrap">
+
+    <!-- PROGRESS -->
+    <div class="progress-bar">
+      <div class="step-item active" id="si-1">
+        <div class="step-num">1</div>
+        <div class="step-label">Lokacija</div>
+      </div>
+      <div class="step-item" id="si-2">
+        <div class="step-num">2</div>
+        <div class="step-label">Situacija</div>
+      </div>
+      <div class="step-item" id="si-3">
+        <div class="step-num">3</div>
+        <div class="step-label">Nekretnina</div>
+      </div>
+    </div>
+
+    <!-- STEP 1 — LOCATION -->
+    <div class="step-panel active" id="sp-1">
+      <h2 class="step-title">Gdje tražiš<br><em>nekretninu?</em></h2>
+      <p class="step-desc">Svaka lokacija ima drugačiji tržišni tempo i potencijal rasta.</p>
+
+      <div class="loc-grid">
+        <div class="loc-btn active" onclick="selectLoc(this,'zg-centar')" data-loc="zg-centar">
+          <div class="loc-btn-name">Zagreb — Centar</div>
+          <div class="loc-btn-price">~4.150 €/m²</div>
+          <div class="loc-btn-badge hot">🔥 Vruće tržište</div>
+        </div>
+        <div class="loc-btn" onclick="selectLoc(this,'zg-ostalo')" data-loc="zg-ostalo">
+          <div class="loc-btn-name">Zagreb — Ostalo</div>
+          <div class="loc-btn-price">~3.000 €/m²</div>
+          <div class="loc-btn-badge stable">✅ Stabilno</div>
+        </div>
+        <div class="loc-btn" onclick="selectLoc(this,'istra-obala')" data-loc="istra-obala">
+          <div class="loc-btn-name">Istra — Obala</div>
+          <div class="loc-btn-price">~4.700 €/m²</div>
+          <div class="loc-btn-badge hot">🏖️ Premium</div>
+        </div>
+        <div class="loc-btn" onclick="selectLoc(this,'istra-ostalo')" data-loc="istra-ostalo">
+          <div class="loc-btn-name">Istra — Unutrašnjost</div>
+          <div class="loc-btn-price">~2.800 €/m²</div>
+          <div class="loc-btn-badge stable">📈 Rast</div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-next" onclick="goStep(2)">Dalje →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — SITUATION -->
+    <div class="step-panel" id="sp-2">
+      <h2 class="step-title">Tvoja trenutna<br><em>situacija</em></h2>
+      <p class="step-desc">Što točno plaćaš sada i koliko si uspio uštedjeti?</p>
+
+      <div class="card">
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">Trenutna stanarina / mjesec</div>
+              <div class="slider-sub">Koliko plaćaš svaki mjesec stanodavcu</div>
+            </div>
+            <div class="slider-val" id="v-rent">700 €</div>
+          </div>
+          <input type="range" id="s-rent" min="300" max="2500" value="700" step="50" oninput="sv('v-rent',this.value,'€',true)">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">Ukupna uštevina (polog)</div>
+              <div class="slider-sub">Koliko imaš za uložiti odmah</div>
+            </div>
+            <div class="slider-val" id="v-savings">30.000 €</div>
+          </div>
+          <input type="range" id="s-savings" min="5000" max="200000" value="30000" step="5000" oninput="sv('v-savings',this.value,'€',true)">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">Planirani boravak</div>
+              <div class="slider-sub">Koliko godina planiraš ostati na ovoj lokaciji</div>
+            </div>
+            <div class="slider-val" id="v-years">7 god.</div>
+          </div>
+          <input type="range" id="s-years" min="1" max="25" value="7" step="1" oninput="sv('v-years',this.value,' god.',false)">
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-outline" onclick="goStep(1)">← Natrag</button>
+        <button class="btn-next" onclick="goStep(3)">Dalje →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — PROPERTY + SCENARIO -->
+    <div class="step-panel" id="sp-3">
+      <h2 class="step-title">Nekretnina &<br><em>scenarij</em></h2>
+      <p class="step-desc">Odaberi veličinu stana i tržišni scenarij koji te zanima.</p>
+
+      <div class="card">
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">Veličina nekretnine</div>
+              <div class="slider-sub">Kvadratura stana koji te zanima</div>
+            </div>
+            <div class="slider-val" id="v-size">55 m²</div>
+          </div>
+          <input type="range" id="s-size" min="25" max="200" value="55" step="5" oninput="sv('v-size',this.value,' m²',false)">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">Kamatna stopa kredita</div>
+              <div class="slider-sub">Trenutne stope su 2.8–3.5%</div>
+            </div>
+            <div class="slider-val" id="v-rate">3.0%</div>
+          </div>
+          <input type="range" id="s-rate" min="1.5" max="6" value="3" step="0.1" oninput="svRate()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="bc-title" style="margin-bottom:14px">Scenarij rasta tržišta</div>
+        <div class="scenario-tabs">
+          <div class="sc-tab" onclick="selectScenario(this,'pessimistic')">
+            <div class="sc-tab-name">Konzervativno</div>
+            <div class="sc-tab-sub">Rast 2%/god</div>
+          </div>
+          <div class="sc-tab active" onclick="selectScenario(this,'realistic')">
+            <div class="sc-tab-name">Realno</div>
+            <div class="sc-tab-sub">Rast 3–5%/god</div>
+          </div>
+          <div class="sc-tab" onclick="selectScenario(this,'optimistic')">
+            <div class="sc-tab-name">Optimistično</div>
+            <div class="sc-tab-sub">Rast 6–7%/god</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-outline" onclick="goStep(2)">← Natrag</button>
+        <button class="btn-next" onclick="calculate()">Izračunaj rezultate →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div id="results">
+  <div class="wrap">
+
+    <div style="margin-bottom:32px;padding-top:48px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Tvoja analiza</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,40px);font-weight:700;letter-spacing:-.5px">Rezultati <em style="color:var(--gold);font-style:normal">izračuna</em></h2>
+    </div>
+
+    <!-- VERDICT -->
+    <div class="emotion-banner buy" id="emotion-banner">
+      <div class="emotion-top">
+        <div class="emotion-icon" id="e-icon">🏠</div>
+        <div>
+          <div class="emotion-verdict">Naša preporuka</div>
+          <div class="emotion-title" id="e-title">Kupnja se isplati</div>
+        </div>
+      </div>
+      <div class="emotion-sentence" id="e-sentence"></div>
+    </div>
+
+    <!-- KEY NUMBERS -->
+    <div class="key-nums">
+      <div class="key-num">
+        <div class="kn-label">Cijena nekretnine</div>
+        <div class="kn-val gold" id="kn-price"></div>
+        <div class="kn-sub">procijenjena tržišna vrijednost</div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Break-even točka</div>
+        <div class="kn-val white" id="kn-be"></div>
+        <div class="kn-sub">godina do isplativosti kupnje</div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Ukupno u najmu</div>
+        <div class="kn-val red" id="kn-rent-total"></div>
+        <div class="kn-sub" id="kn-years-sub">za X godina</div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Ukupno za kupnju</div>
+        <div class="kn-val white" id="kn-buy-total"></div>
+        <div class="kn-sub">sve uključeno</div>
+      </div>
+    </div>
+
+    <!-- FUTURE VALUE -->
+    <div class="future-highlight">
+      <div class="fh-icon">📈</div>
+      <div class="fh-text">
+        <div class="fh-label">Vrijednost nekretnine za 10 godina</div>
+        <div class="fh-val" id="fh-val"></div>
+        <div class="fh-sub" id="fh-sub">procijenjeni rast vrijednosti</div>
+      </div>
+    </div>
+
+    <!-- BREAKDOWN -->
+    <div class="breakdown-card">
+      <div class="bc-title">Troškovi kupnje — detaljan pregled</div>
+      <div class="bc-row"><span class="bc-label">Cijena nekretnine</span><span class="bc-val w" id="b-price"></span></div>
+      <div class="bc-row"><span class="bc-label">Porez na promet (3%)</span><span class="bc-val r" id="b-tax"></span></div>
+      <div class="bc-row"><span class="bc-label">Javni bilježnik + uknjižba</span><span class="bc-val r">~1.500 €</span></div>
+      <div class="bc-row"><span class="bc-label">Agencijska provizija (2%)</span><span class="bc-val r" id="b-agency"></span></div>
+      <div class="bc-row"><span class="bc-label">Energetski certifikat</span><span class="bc-val r">~200 €</span></div>
+      <div class="bc-row"><span class="bc-label">Ukupni ulazni troškovi</span><span class="bc-val w" id="b-entry"></span></div>
+      <div class="bc-row" style="margin-top:8px">
+        <span class="bc-label">Tvoj polog</span><span class="bc-val g" id="b-savings"></span>
+      </div>
+      <div class="bc-row"><span class="bc-label">Kredit potreban</span><span class="bc-val r" id="b-loan"></span></div>
+      <div class="bc-row"><span class="bc-label">Mjesečna rata kredita</span><span class="bc-val w" id="b-monthly"></span></div>
+      <div class="bc-row"><span class="bc-label">Godišnje održavanje (~0.7%)</span><span class="bc-val r" id="b-maint"></span></div>
+    </div>
+
+    <!-- SCENARIO COMPARISON -->
+    <div class="compare-table">
+      <div class="compare-header">
+        <div>Scenarij</div>
+        <div>Vrijednost (10 god.)</div>
+        <div>Break-even</div>
+      </div>
+      <div class="compare-row">
+        <div class="cr-label">Konzervativno</div>
+        <div class="cr-val" id="sc-pess-val"></div>
+        <div class="cr-val" id="sc-pess-be"></div>
+      </div>
+      <div class="compare-row" style="background:var(--gold-dim)">
+        <div class="cr-label" style="color:var(--gold)">⭐ Realno</div>
+        <div class="cr-val" style="color:var(--gold)" id="sc-real-val"></div>
+        <div class="cr-val" style="color:var(--gold)" id="sc-real-be"></div>
+      </div>
+      <div class="compare-row">
+        <div class="cr-label">Optimistično</div>
+        <div class="cr-val" id="sc-opt-val"></div>
+        <div class="cr-val" id="sc-opt-be"></div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Kumulativni troškovi kroz 10 godina</div>
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-dot" style="background:#c05a5a"></div>Najam</div>
+          <div class="leg"><div class="leg-dot" style="background:#c8a96e"></div>Kupnja</div>
+        </div>
+      </div>
+      <canvas id="chart" height="200"></canvas>
+    </div>
+
+    <!-- SHARE -->
+    <div class="share-card">
+      <div class="share-text">
+        <strong>Donosiš ovu odluku s partnerom?</strong><br>
+        Podijeli analizu i donesite odluku zajedno.
+      </div>
+      <div class="share-btns">
+        <button class="share-btn wa" onclick="shareWA()">📱 WhatsApp</button>
+        <button class="share-btn" onclick="copyLink()">🔗 Kopiraj link</button>
+      </div>
+    </div>
+
+    <button class="recalc" onclick="resetAll()">← Promijeni podatke i izračunaj ponovno</button>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Link kopiran!</div>
+
+<script>
+// ═══ STATE ═══
+let loc = 'zg-centar';
+let scenario = 'realistic';
+let chartInst = null;
+let userName = '';
+
+const LOC = {
+  'zg-centar':   {price:4150, rentGrowth:.10, priceGrowth:{pessimistic:.02,realistic:.03,optimistic:.06}},
+  'zg-ostalo':   {price:3000, rentGrowth:.08, priceGrowth:{pessimistic:.02,realistic:.03,optimistic:.05}},
+  'istra-obala': {price:4700, rentGrowth:.08, priceGrowth:{pessimistic:.03,realistic:.05,optimistic:.07}},
+  'istra-ostalo':{price:2800, rentGrowth:.06, priceGrowth:{pessimistic:.02,realistic:.04,optimistic:.06}},
+};
+
+// ═══ GATE ═══
+function unlock(){
+  const n=document.getElementById('g-name').value.trim();
+  const e=document.getElementById('g-email').value.trim();
+  if(!n){alert('Unesi svoje ime.');return}
+  if(!e||!e.includes('@')){alert('Unesi valjanu email adresu.');return}
+  userName=n;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('calc-screen').style.display='block';
+  window.scrollTo(0,0);
+}
+
+// ═══ STEPS ═══
+let currentStep=1;
+function goStep(n){
+  document.getElementById('sp-'+currentStep).classList.remove('active');
+  document.getElementById('si-'+currentStep).classList.remove('active');
+  document.getElementById('si-'+currentStep).classList.add('done');
+  if(n<currentStep){
+    document.getElementById('si-'+currentStep).classList.remove('done');
+    document.getElementById('si-'+n).classList.remove('done');
+  }
+  currentStep=n;
+  document.getElementById('sp-'+n).classList.add('active');
+  document.getElementById('si-'+n).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ LOCATION ═══
+function selectLoc(el,l){
+  document.querySelectorAll('.loc-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  loc=l;
+}
+
+// ═══ SCENARIO ═══
+function selectScenario(el,s){
+  document.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  scenario=s;
+}
+
+// ═══ SLIDER VALUES ═══
+function sv(id,val,suffix,thousands){
+  const n=parseFloat(val);
+  let display;
+  if(thousands && n>=1000) display=Math.round(n).toLocaleString('hr')+' '+suffix;
+  else display=n+suffix;
+  document.getElementById(id).textContent=display;
+}
+function svRate(){
+  const v=parseFloat(document.getElementById('s-rate').value).toFixed(1);
+  document.getElementById('v-rate').textContent=v+'%';
+}
+
+// ═══ FORMAT ═══
+function fmt(n){return Math.round(n).toLocaleString('hr')+' €'}
+
+// ═══ BREAK-EVEN ═══
+function calcBreakeven(startRent,monthlyBuy,entry,rentGrowth){
+  let cumRent=0,cumBuy=entry,r=startRent;
+  for(let m=1;m<=360;m++){
+    cumRent+=r;
+    cumBuy+=monthlyBuy;
+    if(m%12===0) r*=(1+rentGrowth);
+    if(cumBuy<=cumRent) return Math.ceil(m/12);
+  }
+  return null;
+}
+
+// ═══ CALCULATE ═══
+function calculate(){
+  const rent=parseInt(document.getElementById('s-rent').value);
+  const savings=parseInt(document.getElementById('s-savings').value);
+  const years=parseInt(document.getElementById('s-years').value);
+  const size=parseInt(document.getElementById('s-size').value);
+  const rate=parseFloat(document.getElementById('s-rate').value)/100;
+
+  const d=LOC[loc];
+  const priceGrowth=d.priceGrowth[scenario];
+  const propertyPrice=size*d.price;
+
+  // Entry costs
+  const tax=propertyPrice*0.03;
+  const notary=1500;
+  const agency=propertyPrice*0.02;
+  const energy=200;
+  const entry=propertyPrice+tax+notary+agency+energy;
+
+  // Loan
+  const loan=Math.max(0,entry-savings);
+  const mr=rate/12, n=25*12;
+  const monthly=loan>0?loan*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1):0;
+  const maintenance=propertyPrice*0.007/12;
+  const totalMonthly=monthly+maintenance;
+
+  // Total rent over years
+  let totalRent=0,r=rent;
+  for(let y=0;y<years;y++){totalRent+=r*12;r*=(1+d.rentGrowth)}
+
+  // Total buy
+  const totalBuy=entry+(totalMonthly*12*years);
+
+  // Future values
+  const fv10=propertyPrice*Math.pow(1+priceGrowth,10);
+  const fvYears=propertyPrice*Math.pow(1+priceGrowth,years);
+
+  // Break-even
+  const be=calcBreakeven(rent,totalMonthly,entry,d.rentGrowth);
+
+  // Scenario comparison
+  const scen={
+    pessimistic:{pg:d.priceGrowth.pessimistic},
+    realistic:{pg:d.priceGrowth.realistic},
+    optimistic:{pg:d.priceGrowth.optimistic}
+  };
+  Object.keys(scen).forEach(k=>{
+    scen[k].fv10=Math.round(propertyPrice*Math.pow(1+scen[k].pg,10));
+    scen[k].be=calcBreakeven(rent,totalMonthly,entry,d.rentGrowth);
+  });
+
+  // ═ RENDER ═
+
+  // Verdict
+  const banner=document.getElementById('emotion-banner');
+  const icon=document.getElementById('e-icon');
+  const title=document.getElementById('e-title');
+  const sentence=document.getElementById('e-sentence');
+  banner.className='emotion-banner';
+
+  const rentLost=Math.round(totalRent);
+  const rentLostFmt=fmt(rentLost);
+  const gain=Math.round(fvYears-propertyPrice);
+
+  if(be!==null && be<=years){
+    banner.classList.add('buy');
+    icon.textContent='🏠';
+    title.textContent='Kupnja se isplati';
+    sentence.innerHTML=`${userName ? userName+', a' : 'A'}ko ostaneš u najmu <strong>${years} godina</strong>, platit ćeš stanodavcu <strong>${rentLostFmt}</strong> — a imat ćeš nula imovine za pokazati. Kupnjom bi za to vrijeme stan porastao u vrijednosti za dodatnih <strong>${fmt(gain)}</strong>.`;
+  } else if(be===null || be>years+4){
+    banner.classList.add('rent');
+    icon.textContent='🏘️';
+    title.textContent='Najam je trenutno pametiniji';
+    sentence.innerHTML=`Na temelju tvojih podataka, break-even točka ${be?'je tek oko '+be+'. godine':'prelazi 30 godina'} — dulje od tvojih planova. <strong>Nastavi štedjeti</strong> i povećaj polog, pa ćeš za ${Math.min(years+3,15)} godina biti u puno boljoj poziciji za kupnju.`;
+  } else {
+    banner.classList.add('neutral');
+    icon.textContent='⚖️';
+    title.textContent='Blizu — ovisi o životnom planu';
+    sentence.innerHTML=`Break-even je oko <strong>${be}. godine</strong> — ti planiraš ostati <strong>${years} godina</strong>. Financijska razlika je mala, no vlasništvo ti daje sigurnost i imovinu koja raste. <strong>Ovisi što ti je prioritet</strong>.`;
+  }
+
+  // Key numbers
+  document.getElementById('kn-price').textContent=fmt(propertyPrice);
+  document.getElementById('kn-be').textContent=be?be+'. god.':'30+ god.';
+  document.getElementById('kn-rent-total').textContent=fmt(totalRent);
+  document.getElementById('kn-buy-total').textContent=fmt(totalBuy);
+  document.getElementById('kn-years-sub').textContent='za '+years+' godina';
+
+  // Future value
+  const gainPct=Math.round((fv10/propertyPrice-1)*100);
+  document.getElementById('fh-val').textContent=fmt(fv10);
+  document.getElementById('fh-sub').textContent=`+${gainPct}% rasta (${scenario==='pessimistic'?'konzervativni':scenario==='realistic'?'realni':'optimistični'} scenarij, 10 god.)`;
+
+  // Breakdown
+  document.getElementById('b-price').textContent=fmt(propertyPrice);
+  document.getElementById('b-tax').textContent='−'+fmt(tax);
+  document.getElementById('b-agency').textContent='−'+fmt(agency);
+  document.getElementById('b-entry').textContent=fmt(entry);
+  document.getElementById('b-savings').textContent='+'+fmt(savings);
+  document.getElementById('b-loan').textContent=fmt(loan);
+  document.getElementById('b-monthly').textContent=fmt(monthly)+'/mj';
+  document.getElementById('b-maint').textContent=fmt(maintenance*12)+'/god';
+
+  // Scenario table
+  ['pess','real','opt'].forEach((k,i)=>{
+    const sk=['pessimistic','realistic','optimistic'][i];
+    document.getElementById('sc-'+k+'-val').textContent=fmt(scen[sk].fv10);
+    document.getElementById('sc-'+k+'-be').textContent=scen[sk].be?scen[sk].be+'. god.':'30+ god.';
+  });
+
+  // Chart
+  drawChart(rent,totalMonthly,entry,d.rentGrowth);
+
+  // Show results
+  document.getElementById('calc-screen').style.display='none';
+  document.getElementById('results').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ CHART ═══
+function drawChart(startRent,monthlyBuy,entry,rentGrowth){
+  const labels=[],rentData=[],buyData=[];
+  let cr=0,cb=entry,r=startRent;
+  for(let y=1;y<=10;y++){
+    for(let m=0;m<12;m++){cr+=r;cb+=monthlyBuy}
+    r*=(1+rentGrowth);
+    labels.push('God. '+y);
+    rentData.push(Math.round(cr));
+    buyData.push(Math.round(cb));
+  }
+  const ctx=document.getElementById('chart').getContext('2d');
+  if(chartInst) chartInst.destroy();
+  chartInst=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Najam',data:rentData,borderColor:'#c05a5a',backgroundColor:'rgba(192,90,90,0.06)',borderWidth:2,pointRadius:2,tension:.4,fill:true},
+        {label:'Kupnja',data:buyData,borderColor:'#c8a96e',backgroundColor:'rgba(200,169,110,0.06)',borderWidth:2,pointRadius:2,tension:.4,fill:true}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1a1c1f',
+          borderColor:'#2e3035',
+          borderWidth:1,
+          titleColor:'#ede9e0',
+          bodyColor:'#6b6e75',
+          callbacks:{label:c=>' '+c.parsed.y.toLocaleString('hr')+' €'}
+        }
+      },
+      scales:{
+        x:{grid:{color:'#1a1c1f'},ticks:{color:'#4a4d54',font:{size:11,family:'Outfit'}}},
+        y:{grid:{color:'#1a1c1f'},ticks:{color:'#4a4d54',font:{size:11,family:'Outfit'},callback:v=>(v/1000).toFixed(0)+'k €'}}
+      }
+    }
+  });
+}
+
+// ═══ SHARE ═══
+function shareWA(){
+  const txt=encodeURIComponent('Pogledaj ovaj kalkulator — izračunaj isplati li ti se kupiti stan ili nastaviti s najmom 👇\n'+window.location.href);
+  window.open('https://wa.me/?text='+txt,'_blank');
+}
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    const t=document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2500);
+  });
+}
+
+// ═══ RESET ═══
+function resetAll(){
+  document.getElementById('results').style.display='none';
+  document.getElementById('calc-screen').style.display='block';
+  currentStep=1;
+  ['sp-1','sp-2','sp-3'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  ['si-1','si-2','si-3'].forEach(id=>{
+    document.getElementById(id).classList.remove('active','done');
+  });
+  document.getElementById('sp-1').classList.add('active');
+  document.getElementById('si-1').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

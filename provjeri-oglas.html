@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provjeri oglas — Što kupce odbija od tvog stana?</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090a;
+  --surface:#0f1012;
+  --card:#141618;
+  --card2:#1a1c1f;
+  --border:#232528;
+  --border2:#2e3035;
+  --gold:#c8a96e;
+  --gold2:#e8cc9a;
+  --gold-dim:rgba(200,169,110,0.12);
+  --white:#ede9e0;
+  --muted:#6b6e75;
+  --muted2:#4a4d54;
+  --green:#52a87c;
+  --green-dim:rgba(82,168,124,0.15);
+  --red:#c05a5a;
+  --red-dim:rgba(192,90,90,0.15);
+  --orange:#c8834e;
+  --orange-dim:rgba(200,131,78,0.15);
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;
+}
+.glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.glow-1{top:-200px;left:-200px;background:rgba(200,169,110,0.04)}
+.glow-2{bottom:-200px;right:-200px;background:rgba(192,90,90,0.03)}
+.wrap{position:relative;z-index:1;max-width:620px;margin:0 auto;padding:0 20px}
+
+/* GATE */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:60px 20px;animation:fadeUp .7s ease both}
+.gate-inner{width:100%;max-width:500px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,169,110,0.3);padding:7px 18px;border-radius:100px;margin-bottom:32px;font-weight:500}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+.gate-h{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,7vw,62px);font-weight:700;line-height:.95;letter-spacing:-2px;margin-bottom:20px}
+.gate-h em{color:var(--gold);font-style:normal}
+.gate-sub{font-size:15px;color:var(--muted);line-height:1.75;max-width:400px;margin:0 auto 36px}
+.promises{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:32px}
+.promise{display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13.5px;color:var(--muted);line-height:1.5}
+.promise-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.gate-form{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;text-align:left}
+.gate-form-title{font-size:17px;font-weight:500;margin-bottom:4px}
+.gate-form-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.fg label{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.fg input{background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:13px 15px;font-size:14px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.fg input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,169,110,0.08)}
+.fg input::placeholder{color:var(--muted2)}
+.btn-gold{width:100%;background:var(--gold);color:#0a0805;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .2s,transform .1s;letter-spacing:.2px;margin-top:4px}
+.btn-gold:hover{background:var(--gold2)}
+.btn-gold:active{transform:scale(.99)}
+.privacy{text-align:center;font-size:12px;color:var(--muted2);margin-top:12px}
+
+/* QUIZ */
+#quiz-screen{display:none;padding:40px 0 80px;animation:fadeUp .5s ease both}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:36px}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.progress-count{font-size:12px;color:var(--gold);font-weight:500}
+.progress-bar{height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease}
+
+/* BLOCK HEADER */
+.block-header{margin-bottom:28px}
+.block-tag{display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,169,110,0.3);padding:4px 12px;border-radius:100px;margin-bottom:12px;font-weight:500}
+.block-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-top:8px}
+
+/* QUESTION */
+.question-wrap{margin-bottom:24px;animation:fadeUp .3s ease both}
+.question-text{font-size:16px;font-weight:500;color:var(--white);margin-bottom:14px;line-height:1.5}
+.question-note{font-size:12px;color:var(--muted2);margin-top:-10px;margin-bottom:14px}
+
+/* OPTIONS */
+.options{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 16px;cursor:pointer;transition:all .2s;font-size:14px;color:var(--muted);line-height:1.4}
+.opt:hover{border-color:var(--border2);color:var(--white)}
+.opt.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--white)}
+.opt.selected .opt-check{background:var(--gold);border-color:var(--gold)}
+.opt-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.opt-check::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--bg);opacity:0;transition:opacity .2s}
+.opt.selected .opt-check::after{opacity:1}
+
+/* CHECKBOX STYLE */
+.opt.checkbox .opt-check{border-radius:4px}
+.opt.checkbox.selected .opt-check{background:var(--gold);border-color:var(--gold)}
+
+/* NAV */
+.nav-row{display:flex;gap:12px;margin-top:28px}
+.btn-back{flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:14px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s}
+.btn-back:hover{color:var(--white);border-color:var(--border2)}
+.btn-next{flex:2;background:var(--gold);color:#0a0805;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .2s}
+.btn-next:hover{background:var(--gold2)}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+
+/* RESULTS */
+#results{display:none;padding:48px 0 80px;animation:fadeUp .5s ease both}
+
+.score-banner{border-radius:var(--r);padding:28px 24px;margin-bottom:16px;text-align:center}
+.score-banner.good{background:linear-gradient(135deg,#0d1f12,#0a1a0e);border:1px solid rgba(82,168,124,0.3)}
+.score-banner.mid{background:linear-gradient(135deg,#1a1508,#120f04);border:1px solid rgba(200,169,110,0.3)}
+.score-banner.bad{background:linear-gradient(135deg,#1f0d0d,#1a0a0a);border:1px solid rgba(192,90,90,0.3)}
+.score-emoji{font-size:48px;margin-bottom:12px}
+.score-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:500}
+.score-title{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,34px);font-weight:700;line-height:1.1;margin-bottom:8px}
+.score-banner.good .score-title{color:var(--green)}
+.score-banner.mid .score-title{color:var(--gold)}
+.score-banner.bad .score-title{color:var(--red)}
+.score-sub{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* SCORE BAR */
+.score-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px}
+.score-bar-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px}
+.score-bars{display:flex;flex-direction:column;gap:14px}
+.score-bar-item{}
+.sbi-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+.sbi-label{color:var(--muted)}
+.sbi-val{font-weight:500}
+.sbi-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.sbi-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.sbi-fill.green{background:var(--green)}
+.sbi-fill.orange{background:var(--orange)}
+.sbi-fill.red{background:var(--red)}
+
+/* ISSUES */
+.issues-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px}
+.issues-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:500;margin-bottom:16px}
+.issue-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.5}
+.issue-item:last-child{border:none}
+.issue-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.issue-text{color:var(--muted)}
+.issue-text strong{color:var(--white);font-weight:500;display:block;margin-bottom:2px}
+
+/* WINS */
+.wins-card{background:linear-gradient(135deg,#0d1f12,#0a1a0e);border:1px solid rgba(82,168,124,0.2);border-radius:var(--r);padding:22px;margin-bottom:16px}
+.wins-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:500;margin-bottom:16px}
+.win-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(82,168,124,0.1);font-size:13.5px;color:var(--muted)}
+.win-item:last-child{border:none}
+
+/* CTA */
+.cta-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin-bottom:8px}
+.cta-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.cta-input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:13px 15px;font-size:14px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;margin-bottom:10px}
+.cta-input:focus{border-color:var(--gold)}
+.cta-input::placeholder{color:var(--muted2)}
+.cta-btn{width:100%;background:var(--gold);color:#0a0805;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .2s}
+.cta-btn:hover{background:var(--gold2)}
+.cta-note{font-size:12px;color:var(--muted2);text-align:center;margin-top:10px}
+
+.recalc{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:13px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;margin-top:8px;margin-bottom:40px}
+.recalc:hover{color:var(--white);border-color:var(--border2)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card2);border:1px solid var(--border2);border-radius:100px;padding:12px 20px;font-size:13px;color:var(--white);z-index:1000;transition:transform .3s ease;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:480px){
+  .field-row{grid-template-columns:1fr}
+  .gate-form{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="wrap">
+    <div class="gate-inner">
+      <div class="badge"><span class="badge-dot"></span> Besplatni alat za prodavače</div>
+      <h1 class="gate-h">Što kupce<br><em>odbija</em> od<br>tvog oglasa?</h1>
+      <p class="gate-sub">Za 3 minute saznaj točno što radite krivo u oglasu i dobij konkretne savjete kako to popraviti još danas.</p>
+      <div class="promises">
+        <div class="promise"><div class="promise-icon">📸</div><div>Fotografije, opis i cijena — gdje oglas gubi kupce</div></div>
+        <div class="promise"><div class="promise-icon">🎯</div><div>Konkretne preporuke prilagođene tvojoj situaciji</div></div>
+        <div class="promise"><div class="promise-icon">⚡</div><div>25 pitanja, 3 minute, odmah vidiš rezultat</div></div>
+      </div>
+      <div class="gate-form">
+        <div class="gate-form-title">Dobij pristup besplatnom kvizu</div>
+        <div class="gate-form-sub">Unesi podatke i odmah počni. Bez spama.</div>
+        <div class="field-row">
+          <div class="fg"><label>Ime</label><input type="text" id="g-name" placeholder="Tvoje ime" autocomplete="given-name"></div>
+          <div class="fg"><label>Email</label><input type="email" id="g-email" placeholder="tvoj@email.com" autocomplete="email"></div>
+        </div>
+        <button class="btn-gold" onclick="unlock()">Počni kviz →</button>
+        <div class="privacy">🔒 Nema dijeljenja podataka. Odjava kada želiš.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-screen">
+  <div class="wrap">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label" id="block-name">Osnovno</span>
+        <span class="progress-count" id="progress-count">1 / 25</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:4%"></div></div>
+    </div>
+    <div id="block-header" class="block-header"></div>
+    <div id="question-area"></div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back" onclick="prevQ()" style="display:none">← Natrag</button>
+      <button class="btn-next" id="btn-next" onclick="nextQ()" disabled>Dalje →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="wrap">
+    <div style="margin-bottom:28px;padding-top:48px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Analiza tvog oglasa</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,40px);font-weight:700;letter-spacing:-.5px">Tvoj <em style="color:var(--gold);font-style:normal">rezultat</em></h2>
+    </div>
+
+    <div id="score-banner" class="score-banner mid">
+      <div class="score-emoji" id="score-emoji">🏠</div>
+      <div class="score-label">Ocjena oglasa</div>
+      <div class="score-title" id="score-title"></div>
+      <div class="score-sub" id="score-sub"></div>
+    </div>
+
+    <div class="score-bar-wrap">
+      <div class="score-bar-title">Ocjena po kategorijama</div>
+      <div class="score-bars">
+        <div class="score-bar-item">
+          <div class="sbi-top"><span class="sbi-label">📸 Fotografije</span><span class="sbi-val" id="s-foto">0%</span></div>
+          <div class="sbi-bar"><div class="sbi-fill" id="b-foto" style="width:0%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="sbi-top"><span class="sbi-label">✍️ Tekst oglasa</span><span class="sbi-val" id="s-tekst">0%</span></div>
+          <div class="sbi-bar"><div class="sbi-fill" id="b-tekst" style="width:0%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="sbi-top"><span class="sbi-label">💰 Cijena i strategija</span><span class="sbi-val" id="s-cijena">0%</span></div>
+          <div class="sbi-bar"><div class="sbi-fill" id="b-cijena" style="width:0%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="sbi-top"><span class="sbi-label">📋 Osnovno</span><span class="sbi-val" id="s-osnovno">0%</span></div>
+          <div class="sbi-bar"><div class="sbi-fill" id="b-osnovno" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="issues-card" id="issues-card">
+      <div class="issues-title">Što treba popraviti</div>
+      <div id="issues-list"></div>
+    </div>
+
+    <div class="wins-card" id="wins-card" style="display:none">
+      <div class="wins-title">Što radiš dobro</div>
+      <div id="wins-list"></div>
+    </div>
+
+    <div class="cta-card">
+      <div class="cta-title">Besplatna analiza tvog oglasa</div>
+      <div class="cta-sub">Ostavi mi link na oglas i mail — pogledat ću ga osobno i poslati ti konkretne smjernice što promijeniti u opisu, kojim redoslijedom staviti fotografije i kako postaviti cijenu da dobiješ više upita u sljedećih 14 dana.</div>
+      <input class="cta-input" type="email" id="cta-email" placeholder="tvoj@email.com">
+      <input class="cta-input" type="url" id="cta-link" placeholder="Link na oglas (nije obavezno)">
+      <button class="cta-btn" onclick="submitCTA()">Pošalji mi oglas na analizu →</button>
+      <div class="cta-note">Bez obveze. Odgovor u roku 24 sata.</div>
+    </div>
+
+    <button class="recalc" onclick="resetAll()">← Ispuni kviz ponovno</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Primljeno! Javit ću se uskoro.</div>
+
+<script>
+let userName = '';
+let answers = {};
+let currentQ = 0;
+
+// ═══ QUESTIONS ═══
+const QUESTIONS = [
+  // BLOK 1 — OSNOVNO
+  {
+    id:'q1', block:'Osnovno', blockDesc:'Nekoliko brzih pitanja o tvom trenutnom oglasu.',
+    text:'Jesi li već objavio oglas za prodaju?',
+    type:'radio',
+    opts:[
+      {label:'Da, oglas je aktivan', score:1},
+      {label:'Da, ali sam ga povukao', score:0},
+      {label:'Još nisam objavio', score:0}
+    ],
+    category:'osnovno'
+  },
+  {
+    id:'q2', block:'Osnovno',
+    text:'Gdje si objavio oglas?',
+    note:'Možeš odabrati više odgovora',
+    type:'checkbox',
+    opts:[
+      {label:'Njuškalo', score:1},
+      {label:'Facebook Marketplace', score:1},
+      {label:'Oglasnik', score:0.5},
+      {label:'Agencija za nekretnine', score:1},
+      {label:'Prijatelji i poznanici', score:0.5},
+      {label:'Nigdje još', score:0}
+    ],
+    category:'osnovno'
+  },
+  {
+    id:'q3', block:'Osnovno',
+    text:'Koliko dugo oglas stoji online?',
+    type:'radio',
+    opts:[
+      {label:'Tek sam objavio (manje od 2 tjedna)', score:1},
+      {label:'2 do 6 tjedana', score:0.7},
+      {label:'Više od 6 tjedana', score:0.3},
+      {label:'Više od 3 mjeseca', score:0}
+    ],
+    category:'osnovno'
+  },
+  {
+    id:'q4', block:'Osnovno',
+    text:'Koliko ozbiljnih upita si dobio do sada?',
+    note:'Ozbiljan upit = netko te kontaktirao i pokazao pravi interes',
+    type:'radio',
+    opts:[
+      {label:'Nitko se nije javio', score:0},
+      {label:'1 do 3 upita', score:0.3},
+      {label:'4 do 10 upita', score:0.7},
+      {label:'Više od 10 upita', score:1}
+    ],
+    category:'osnovno'
+  },
+  {
+    id:'q5', block:'Osnovno',
+    text:'Koliko pregleda stana uživo si imao?',
+    type:'radio',
+    opts:[
+      {label:'Niti jedan', score:0},
+      {label:'1 do 2', score:0.3},
+      {label:'3 do 5', score:0.7},
+      {label:'Više od 5', score:1}
+    ],
+    category:'osnovno'
+  },
+  {
+    id:'q6', block:'Osnovno',
+    text:'Kako si postavio cijenu?',
+    type:'radio',
+    opts:[
+      {label:'Procijenio sam sam prema osjećaju', score:0},
+      {label:'Gledao sam slične oglase na Njuškalu', score:0.7},
+      {label:'Koristio sam online procjenitelje', score:0.5},
+      {label:'Savjetovao sam se s agentom ili procjeniteljem', score:1}
+    ],
+    category:'osnovno'
+  },
+
+  // BLOK 2 — FOTOGRAFIJE
+  {
+    id:'q7', block:'Fotografije', blockDesc:'Fotografije su razlog broj jedan zašto kupci kliknu ili ne kliknu na oglas.',
+    text:'Tko je snimio fotografije tvog stana?',
+    type:'radio',
+    opts:[
+      {label:'Ja, mobitelom', score:0},
+      {label:'Agencija za nekretnine', score:0.7},
+      {label:'Ja, fotoaparatom', score:0.5},
+      {label:'Profesionalni fotograf', score:1}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q8', block:'Fotografije',
+    text:'Kada su fotografije snimljene?',
+    type:'radio',
+    opts:[
+      {label:'Danju, uz prirodno svjetlo', score:1},
+      {label:'Navečer ili uz umjetno svjetlo', score:0},
+      {label:'Mješavina dana i noći', score:0.5},
+      {label:'Ne sjećam se', score:0.2}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q9', block:'Fotografije',
+    text:'Kako je stan izgledao na fotografijama?',
+    type:'radio',
+    opts:[
+      {label:'Uredno i pospremljeno, bez osobnih stvari', score:1},
+      {label:'Uglavnom uredno, ali ima nekih stvari', score:0.6},
+      {label:'Snimao sam kako je stan izgledao u tom trenutku', score:0.2},
+      {label:'Na fotkama se vide osobne stvari, nered', score:0}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q10', block:'Fotografije',
+    text:'Ima li tvoj oglas fotografiju koja odmah privuče pažnju?',
+    note:'Npr. najljepša prostorija, pogled, terasa, dnevni boravak',
+    type:'radio',
+    opts:[
+      {label:'Da, prva fotka je najatraktivnija', score:1},
+      {label:'Nisam razmišljao o tome, stavio sam redom', score:0},
+      {label:'Ne znam koja bi to bila', score:0}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q11', block:'Fotografije',
+    text:'Koliko fotografija ima tvoj oglas?',
+    type:'radio',
+    opts:[
+      {label:'Manje od 5', score:0},
+      {label:'5 do 10', score:0.5},
+      {label:'11 do 20', score:1},
+      {label:'Više od 20', score:0.8}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q12', block:'Fotografije',
+    text:'Ima li tvoj oglas fotografiju tlocrta stana?',
+    type:'radio',
+    opts:[
+      {label:'Da', score:1},
+      {label:'Ne', score:0},
+      {label:'Ne znam što je tlocrt', score:0}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q13', block:'Fotografije',
+    text:'Jesu li fotografije oštre, svjetle i jasne?',
+    type:'radio',
+    opts:[
+      {label:'Oštre i jasne, dobro osvjetljene', score:1},
+      {label:'Neke su dobre, neke lošije', score:0.5},
+      {label:'Većina je tamna ili mutna', score:0},
+      {label:'Nisam siguran', score:0.2}
+    ],
+    category:'foto'
+  },
+  {
+    id:'q14', block:'Fotografije',
+    text:'Ima li na fotografijama vidljivih nedostataka?',
+    note:'Npr. vlaga, pukotine, oštećenja koja nisi planirao pokazati',
+    type:'radio',
+    opts:[
+      {label:'Ne, stan je u dobrom stanju i to se vidi', score:1},
+      {label:'Ima sitnih stvari ali nisu bitne', score:0.6},
+      {label:'Da, ima stvari koje ne izgledaju dobro', score:0}
+    ],
+    category:'foto'
+  },
+
+  // BLOK 3 — TEKST OGLASA
+  {
+    id:'q15', block:'Tekst oglasa', blockDesc:'Opis oglasa je ono što kupca uvjeri da nazove. Većina opisa izgubi kupca u prvoj rečenici.',
+    text:'Kako počinje tvoj oglas, što je prva rečenica?',
+    type:'radio',
+    opts:[
+      {label:'Odmah spominje lokaciju i glavnu prednost stana', score:1},
+      {label:'Počinje s "Prodaje se stan..." ili sličnim', score:0},
+      {label:'Nešto sam napisao, ne znam točno', score:0.2},
+      {label:'Oglas nema tekst, samo fotografije i cijenu', score:0}
+    ],
+    category:'tekst'
+  },
+  {
+    id:'q16', block:'Tekst oglasa',
+    text:'Koliko je dugačak opis tvog oglasa?',
+    type:'radio',
+    opts:[
+      {label:'Jedna do dvije rečenice', score:0.2},
+      {label:'Kratki paragraf, 3 do 5 rečenica', score:0.7},
+      {label:'Duži opis, više od 5 rečenica', score:1},
+      {label:'Nema teksta osim osnovnih podataka', score:0}
+    ],
+    category:'tekst'
+  },
+  {
+    id:'q17', block:'Tekst oglasa',
+    text:'Što tvoj opis konkretno spominje?',
+    note:'Možeš odabrati više odgovora',
+    type:'checkbox',
+    opts:[
+      {label:'Kvadraturu i broj soba', score:0.5},
+      {label:'Lokaciju i blizinu škola, tramvaja, sadržaja', score:1},
+      {label:'Renovacije i što je novo (parket, kuhinja, kupaonica)', score:1},
+      {label:'Parking, podrum, ostava', score:0.8},
+      {label:'Orijentaciju i kat', score:0.7},
+      {label:'Ništa od navedenog', score:0}
+    ],
+    category:'tekst'
+  },
+  {
+    id:'q18', block:'Tekst oglasa',
+    text:'Opisuješ li u oglasu kako se živi u stanu ili samo navodiš tehničke podatke?',
+    type:'radio',
+    opts:[
+      {label:'Opisujem osjećaj i što mi se sviđa kod stana', score:1},
+      {label:'Uglavnom navodim m², sobe, kat i to je to', score:0},
+      {label:'Kombiniram oboje', score:0.8}
+    ],
+    category:'tekst'
+  },
+  {
+    id:'q19', block:'Tekst oglasa',
+    text:'Ima li na kraju oglasa jasna uputa što kupac treba napraviti?',
+    note:'Npr. "Nazovite za dogovor pregleda" ili "Pišite za više informacija"',
+    type:'radio',
+    opts:[
+      {label:'Da, jasno sam napisao sljedeći korak', score:1},
+      {label:'Nisam stavio ništa posebno', score:0},
+      {label:'Ne znam zašto bi to trebalo biti tu', score:0}
+    ],
+    category:'tekst'
+  },
+  {
+    id:'q20', block:'Tekst oglasa',
+    text:'Je li cijena navedena u oglasu?',
+    type:'radio',
+    opts:[
+      {label:'Da, cijena je jasno vidljiva', score:1},
+      {label:'Stavio sam "Cijena po dogovoru"', score:0.3},
+      {label:'Cijena nije navedena', score:0}
+    ],
+    category:'tekst'
+  },
+
+  // BLOK 4 — CIJENA I STRATEGIJA
+  {
+    id:'q21', block:'Cijena i strategija', blockDesc:'Cijena je najvažnija odluka u prodaji. Jedna greška ovdje može koštati tisuće eura ili mjesece čekanja.',
+    text:'Jesi li usporedio svoju cijenu sa sličnim stanovima u kvartu?',
+    type:'radio',
+    opts:[
+      {label:'Da, detaljno sam usporedio aktivne oglase', score:1},
+      {label:'Pogledao sam okvirno ali nisam detaljno', score:0.5},
+      {label:'Nisam, postavio sam cijenu prema tome što mi treba', score:0}
+    ],
+    category:'cijena'
+  },
+  {
+    id:'q22', block:'Cijena i strategija',
+    text:'Gdje je tvoja cijena u usporedbi sa sličnim stanovima u kvartu?',
+    type:'radio',
+    opts:[
+      {label:'Moja cijena je niža od većine', score:1},
+      {label:'Otprilike sam u rangu s konkurencijom', score:0.8},
+      {label:'Moja cijena je viša jer je moj stan bolji', score:0.2},
+      {label:'Nisam siguran', score:0.3}
+    ],
+    category:'cijena'
+  },
+  {
+    id:'q23', block:'Cijena i strategija',
+    text:'Imaš li plan ako za 30 dana ne dobiješ ozbiljan upit?',
+    type:'radio',
+    opts:[
+      {label:'Da, znam što ću napraviti', score:1},
+      {label:'Razmišljao sam ali nemam konkretan plan', score:0.5},
+      {label:'Nisam razmišljao o tome', score:0},
+      {label:'Nadam se da će se prodati samo od sebe', score:0}
+    ],
+    category:'cijena'
+  },
+  {
+    id:'q24', block:'Cijena i strategija',
+    text:'Jesi li spreman na pregovor oko cijene?',
+    type:'radio',
+    opts:[
+      {label:'Da, imam u glavi raspon koji prihvaćam', score:1},
+      {label:'Možda malo, ali ne puno', score:0.6},
+      {label:'Ne, cijena je fiksna', score:0.3},
+      {label:'Nisam razmišljao o tome', score:0}
+    ],
+    category:'cijena'
+  },
+  {
+    id:'q25', block:'Cijena i strategija',
+    text:'Koliko ti je hitno prodati?',
+    type:'radio',
+    opts:[
+      {label:'Nije hitno, čekam pravu cijenu', score:0.5},
+      {label:'Htio bih prodati u roku 3 mjeseca', score:0.8},
+      {label:'Trebam prodati što prije', score:1},
+      {label:'Imam rok zbog kredita ili kupnje novog stana', score:1}
+    ],
+    category:'cijena'
+  }
+];
+
+const BLOCK_NAMES = {
+  'osnovno':'Osnovno',
+  'foto':'Fotografije',
+  'tekst':'Tekst oglasa',
+  'cijena':'Cijena i strategija'
+};
+
+// ═══ STATE ═══
+function unlock(){
+  const n=document.getElementById('g-name').value.trim();
+  const e=document.getElementById('g-email').value.trim();
+  if(!n){alert('Unesi svoje ime.');return}
+  if(!e||!e.includes('@')){alert('Unesi valjanu email adresu.');return}
+  userName=n;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  renderQuestion();
+  window.scrollTo(0,0);
+}
+
+function renderQuestion(){
+  const q=QUESTIONS[currentQ];
+  const total=QUESTIONS.length;
+
+  // Progress
+  document.getElementById('progress-count').textContent=(currentQ+1)+' / '+total;
+  document.getElementById('progress-fill').style.width=(((currentQ+1)/total)*100)+'%';
+  document.getElementById('block-name').textContent=q.block;
+
+  // Block header
+  const bh=document.getElementById('block-header');
+  if(q.blockDesc){
+    bh.innerHTML=`<div class="block-tag">${q.block}</div><div class="block-desc">${q.blockDesc}</div>`;
+    bh.style.display='block';
+  } else {
+    bh.style.display='none';
+  }
+
+  // Question
+  const area=document.getElementById('question-area');
+  const isCheckbox=q.type==='checkbox';
+  const savedAnswer=answers[q.id]||[];
+
+  let optsHTML=q.opts.map((o,i)=>`
+    <div class="opt${isCheckbox?' checkbox':''} ${Array.isArray(savedAnswer)&&savedAnswer.includes(i)?'selected':savedAnswer===i?'selected':''}"
+         onclick="selectOpt(this,${i},'${q.id}',${isCheckbox})">
+      <div class="opt-check"></div>
+      <span>${o.label}</span>
+    </div>
+  `).join('');
+
+  area.innerHTML=`
+    <div class="question-wrap">
+      <div class="question-text">${q.text}</div>
+      ${q.note?`<div class="question-note">${q.note}</div>`:''}
+      <div class="options">${optsHTML}</div>
+    </div>
+  `;
+
+  // Back button
+  document.getElementById('btn-back').style.display=currentQ>0?'block':'none';
+
+  // Next button
+  const hasAnswer=Array.isArray(answers[q.id])?answers[q.id].length>0:answers[q.id]!==undefined;
+  document.getElementById('btn-next').disabled=!hasAnswer;
+  document.getElementById('btn-next').textContent=currentQ===total-1?'Prikaži rezultate →':'Dalje →';
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectOpt(el,idx,qid,isCheckbox){
+  const q=QUESTIONS[currentQ];
+  if(isCheckbox){
+    if(!answers[qid]) answers[qid]=[];
+    const arr=answers[qid];
+    const pos=arr.indexOf(idx);
+    if(pos>-1) arr.splice(pos,1);
+    else arr.push(idx);
+    document.querySelectorAll('.opt').forEach((o,i)=>{
+      o.classList.toggle('selected', arr.includes(i));
+    });
+    document.getElementById('btn-next').disabled=arr.length===0;
+  } else {
+    answers[qid]=idx;
+    document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('btn-next').disabled=false;
+  }
+}
+
+function nextQ(){
+  if(currentQ<QUESTIONS.length-1){
+    currentQ++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function prevQ(){
+  if(currentQ>0){
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+// ═══ SCORING ═══
+function calcScores(){
+  const cats={foto:{score:0,max:0},tekst:{score:0,max:0},cijena:{score:0,max:0},osnovno:{score:0,max:0}};
+
+  QUESTIONS.forEach(q=>{
+    const cat=q.category;
+    const ans=answers[q.id];
+    if(q.type==='checkbox'){
+      const maxScore=Math.max(...q.opts.map(o=>o.score));
+      cats[cat].max+=maxScore*2;
+      if(Array.isArray(ans)){
+        ans.forEach(i=>{cats[cat].score+=q.opts[i].score});
+      }
+    } else {
+      cats[cat].max+=1;
+      if(ans!==undefined) cats[cat].score+=q.opts[ans].score;
+    }
+  });
+
+  const pcts={};
+  Object.keys(cats).forEach(k=>{
+    pcts[k]=cats[k].max>0?Math.round((cats[k].score/cats[k].max)*100):0;
+  });
+  return pcts;
+}
+
+function getColor(pct){
+  if(pct>=70) return 'green';
+  if(pct>=40) return 'orange';
+  return 'red';
+}
+
+function showResults(){
+  const scores=calcScores();
+  const avg=Math.round((scores.foto+scores.tekst+scores.cijena+scores.osnovno)/4);
+
+  // Score bars
+  ['foto','tekst','cijena','osnovno'].forEach(k=>{
+    const pct=scores[k];
+    const color=getColor(pct);
+    document.getElementById('s-'+k.replace('osnovno','osnovno')).textContent=pct+'%';
+    const bar=document.getElementById('b-'+k.replace('osnovno','osnovno'));
+    if(bar){bar.style.width=pct+'%';bar.className='sbi-fill '+color;}
+  });
+
+  // Fix IDs
+  document.getElementById('s-foto').textContent=scores.foto+'%';
+  document.getElementById('b-foto').style.width=scores.foto+'%';
+  document.getElementById('b-foto').className='sbi-fill '+getColor(scores.foto);
+
+  document.getElementById('s-tekst').textContent=scores.tekst+'%';
+  document.getElementById('b-tekst').style.width=scores.tekst+'%';
+  document.getElementById('b-tekst').className='sbi-fill '+getColor(scores.tekst);
+
+  document.getElementById('s-cijena').textContent=scores.cijena+'%';
+  document.getElementById('b-cijena').style.width=scores.cijena+'%';
+  document.getElementById('b-cijena').className='sbi-fill '+getColor(scores.cijena);
+
+  document.getElementById('s-osnovno').textContent=scores.osnovno+'%';
+  document.getElementById('b-osnovno').style.width=scores.osnovno+'%';
+  document.getElementById('b-osnovno').className='sbi-fill '+getColor(scores.osnovno);
+
+  // Overall verdict
+  const banner=document.getElementById('score-banner');
+  const emoji=document.getElementById('score-emoji');
+  const title=document.getElementById('score-title');
+  const sub=document.getElementById('score-sub');
+
+  banner.className='score-banner';
+  if(avg>=70){
+    banner.classList.add('good');
+    emoji.textContent='✅';
+    title.textContent='Oglas je solidan';
+    sub.textContent=`${userName?userName+', t':'T'}voj oglas je iznad prosjeka. Ima prostora za fino podešavanje — posebno ${scores.foto<scores.tekst?'fotografije':'tekst oglasa'} — ali si na dobrom putu.`;
+  } else if(avg>=40){
+    banner.classList.add('mid');
+    emoji.textContent='⚠️';
+    title.textContent='Oglas gubi kupce';
+    sub.textContent=`${userName?userName+', n':'N'}a temelju tvojih odgovora, oglas ima nekoliko problema koji odbijaju kupce prije nego te uopće kontaktiraju. Dobra vijest: sve se može popraviti za dan-dva.`;
+  } else {
+    banner.classList.add('bad');
+    emoji.textContent='🚨';
+    title.textContent='Oglas treba hitnu promjenu';
+    sub.textContent=`${userName?userName+', o':'O'}glas trenutno aktivno odbija kupce. Nije pitanje hoće li se prodati — nego koliko te to košta svaki dan. Konkretne promjene su ispod.`;
+  }
+
+  // Issues
+  const issues=[];
+  const wins=[];
+
+  if(scores.foto<50){
+    issues.push({icon:'📸',title:'Fotografije su najveći problem',text:'Tamne, mutne ili neatraktivne fotografije gube kupca za manje od 3 sekunde. Prva fotka određuje sve.'});
+  } else {
+    wins.push('Fotografije su iznad prosjeka');
+  }
+
+  if(scores.tekst<50){
+    issues.push({icon:'✍️',title:'Opis ne prodaje stan',text:'Kupci ne kupuju kvadrate — kupuju osjećaj. Ako opis počinje s "Prodaje se stan od X m²" već si izgubio pola zainteresiranih.'});
+  } else {
+    wins.push('Tekst oglasa je dobro strukturiran');
+  }
+
+  if(scores.cijena<50){
+    issues.push({icon:'💰',title:'Strategija cijene nije jasna',text:'Previsoka cijena ne znači više novca — znači dulje čekanje i na kraju spuštanje ispod tržišne vrijednosti.'});
+  } else {
+    wins.push('Cijena je postavljena strateški');
+  }
+
+  // Check specific answers
+  const q10ans=answers['q10'];
+  if(q10ans!==undefined && q10ans!==0){
+    issues.push({icon:'🖼️',title:'Nema "hero" fotografije',text:'Prva fotografija u oglasu mora odmah privući pažnju. Stavi najatraktivniju prostoriju, pogled ili terasu na prvo mjesto.'});
+  }
+
+  const q19ans=answers['q19'];
+  if(q19ans!==undefined && q19ans!==0){
+    issues.push({icon:'📞',title:'Nema poziva na akciju',text:'Kupac pročita oglas i ne zna što napraviti sljedeće. Dodaj jednu jasnu rečenicu: "Nazovite za dogovor pregleda."'});
+  }
+
+  const q23ans=answers['q23'];
+  if(q23ans!==undefined && (q23ans===2||q23ans===3)){
+    issues.push({icon:'📅',title:'Nema plana B',text:'Bez strategije za slučaj da oglas stoji, svaki tjedan gubi na snazi i postaje nevidljiv kupacima.'});
+  }
+
+  // Render issues
+  const issuesList=document.getElementById('issues-list');
+  if(issues.length>0){
+    issuesList.innerHTML=issues.map(i=>`
+      <div class="issue-item">
+        <div class="issue-icon">${i.icon}</div>
+        <div class="issue-text"><strong>${i.title}</strong>${i.text}</div>
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('issues-card').style.display='none';
+  }
+
+  // Render wins
+  if(wins.length>0){
+    document.getElementById('wins-card').style.display='block';
+    document.getElementById('wins-list').innerHTML=wins.map(w=>`
+      <div class="win-item">✅ ${w}</div>
+    `).join('');
+  }
+
+  // Pre-fill CTA email
+  const gEmail=document.getElementById('g-email').value;
+  if(gEmail) document.getElementById('cta-email').value=gEmail;
+
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('results').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function submitCTA(){
+  const email=document.getElementById('cta-email').value.trim();
+  if(!email||!email.includes('@')){alert('Unesi valjanu email adresu.');return}
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function resetAll(){
+  answers={};
+  currentQ=0;
+  document.getElementById('results').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  renderQuestion();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

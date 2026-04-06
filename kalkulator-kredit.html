@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator kredita: Koliko te stvarno košta kredit?</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090a;
+  --surface:#0f1012;
+  --card:#141618;
+  --card2:#1a1c1f;
+  --border:#232528;
+  --border2:#2e3035;
+  --gold:#c8a96e;
+  --gold2:#e8cc9a;
+  --gold-dim:rgba(200,169,110,0.12);
+  --white:#ede9e0;
+  --muted:#6b6e75;
+  --muted2:#4a4d54;
+  --green:#52a87c;
+  --green-dim:rgba(82,168,124,0.1);
+  --red:#c05a5a;
+  --red-dim:rgba(192,90,90,0.1);
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;
+}
+.glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.glow-1{top:-200px;left:-200px;background:rgba(200,169,110,0.04)}
+.glow-2{bottom:-200px;right:-200px;background:rgba(192,90,90,0.03)}
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 20px}
+
+/* GATE */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:60px 20px;animation:fadeUp .7s ease both}
+.gate-inner{width:100%;max-width:520px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,169,110,0.3);padding:7px 18px;border-radius:100px;margin-bottom:36px;font-weight:500}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+.gate-h{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,8vw,68px);font-weight:700;line-height:.95;letter-spacing:-2px;margin-bottom:24px}
+.gate-h em{color:var(--gold);font-style:normal}
+.gate-sub{font-size:15px;color:var(--muted);line-height:1.75;max-width:400px;margin:0 auto 40px}
+.promises{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:36px}
+.promise{display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13.5px;color:var(--muted);line-height:1.5}
+.promise-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.gate-form{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px 28px;text-align:left}
+.gate-form-title{font-size:17px;font-weight:500;margin-bottom:4px}
+.gate-form-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.fg label{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.fg input{background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:13px 15px;font-size:14px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.fg input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,169,110,0.08)}
+.fg input::placeholder{color:var(--muted2)}
+.btn-gold{width:100%;background:var(--gold);color:#0a0805;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .2s,transform .1s;letter-spacing:.2px;margin-top:4px}
+.btn-gold:hover{background:var(--gold2)}
+.btn-gold:active{transform:scale(.99)}
+.privacy{text-align:center;font-size:12px;color:var(--muted2);margin-top:12px}
+
+/* CALC */
+#calc-screen{display:none;padding:48px 0 80px;animation:fadeUp .5s ease both}
+.calc-header{text-align:center;margin-bottom:40px}
+.calc-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.1;letter-spacing:-.5px;margin-bottom:8px}
+.calc-title em{color:var(--gold);font-style:normal}
+.calc-sub{font-size:14px;color:var(--muted)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:14px}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:20px}
+
+.slider-field{margin-bottom:24px}
+.slider-field:last-child{margin-bottom:0}
+.slider-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.slider-label{font-size:13px;color:var(--muted)}
+.slider-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+.slider-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--gold);text-align:right}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border2);border-radius:1px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold);cursor:pointer;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--gold);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.1)}
+
+.type-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.type-tab{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif}
+.type-tab:hover{border-color:var(--border2)}
+.type-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.type-tab-name{font-size:13px;font-weight:500}
+.type-tab-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.type-tab.active .type-tab-sub{color:rgba(200,169,110,0.7)}
+
+.calc-btn{width:100%;background:var(--gold);color:#0a0805;border:none;border-radius:12px;padding:17px;font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:background .2s;margin-top:8px}
+.calc-btn:hover{background:var(--gold2)}
+
+/* RESULTS */
+#results{display:none;padding:48px 0 80px;animation:fadeUp .5s ease both}
+
+/* SHOCK BANNER */
+.shock-banner{border-radius:var(--r);padding:28px 24px;margin-bottom:14px;background:linear-gradient(135deg,#1f0d0d,#1a0a0a);border:1px solid rgba(192,90,90,0.3)}
+.shock-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.shock-icon{font-size:44px}
+.shock-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;font-weight:500}
+.shock-title{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,4vw,32px);font-weight:700;color:var(--red);line-height:1.1}
+.shock-sentence{font-size:14px;color:var(--muted);line-height:1.7;padding-top:16px;border-top:1px solid var(--border)}
+.shock-sentence strong{color:var(--white);font-weight:500}
+
+/* KEY NUMBERS */
+.key-nums{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.key-num{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px}
+.kn-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500}
+.kn-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;line-height:1}
+.kn-val.gold{color:var(--gold)}
+.kn-val.green{color:var(--green)}
+.kn-val.red{color:var(--red)}
+.kn-val.white{color:var(--white)}
+.kn-sub{font-size:11px;color:var(--muted2);margin-top:5px}
+
+/* BANK VS YOU */
+.bank-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.bank-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:20px}
+.bank-vs{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px}
+.bank-side{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px;text-align:center}
+.bank-side-label{font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px}
+.bank-side-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700}
+.bank-side-val.red{color:var(--red)}
+.bank-side-val.green{color:var(--green)}
+.bank-side-sub{font-size:11px;color:var(--muted2);margin-top:4px}
+.bank-vs-mid{font-size:11px;color:var(--muted);text-align:center;font-weight:500}
+.bank-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-bottom:8px}
+.bank-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .8s ease}
+.bank-bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+
+/* OVERPAYMENT HIGHLIGHT */
+.overpay-highlight{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid rgba(192,90,90,0.4);border-radius:var(--r);padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
+.oh-icon{font-size:32px;flex-shrink:0}
+.oh-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px;font-weight:500}
+.oh-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--white)}
+.oh-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* EARLY PAYOFF */
+.early-card{background:linear-gradient(135deg,#0d1f12,#0a1a0e);border:1px solid rgba(82,168,124,0.3);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.early-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:500;margin-bottom:16px}
+.early-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(82,168,124,0.1);font-size:13px}
+.early-row:last-child{border:none}
+.early-label{color:var(--muted)}
+.early-val{font-weight:500;color:var(--green)}
+
+/* CHART */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.chart-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500}
+.chart-legend{display:flex;gap:16px}
+.leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+
+/* COMPARISON */
+.compare-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.compare-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px}
+.compare-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.compare-row:last-child{border:none}
+.compare-label{color:var(--muted)}
+.compare-val{font-weight:500}
+
+/* SHARE */
+.share-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.share-text{font-size:13px;color:var(--muted);line-height:1.5}
+.share-text strong{color:var(--white);font-weight:500}
+.share-btns{display:flex;gap:8px;flex-shrink:0}
+.share-btn{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;font-size:12px;font-family:'Outfit',sans-serif;color:var(--white);cursor:pointer;transition:all .2s;white-space:nowrap}
+.share-btn:hover{border-color:var(--gold);color:var(--gold)}
+.share-btn.wa{background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.3);color:#25d366}
+.share-btn.wa:hover{background:rgba(37,211,102,0.15)}
+
+.recalc{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;margin-bottom:40px}
+.recalc:hover{border-color:var(--border2);color:var(--white)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card2);border:1px solid var(--border2);border-radius:100px;padding:12px 20px;font-size:13px;color:var(--white);z-index:1000;transition:transform .3s ease;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* BANK COMPARISON */
+.banks-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.banks-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:6px}
+.banks-updated{font-size:11px;color:var(--muted2);margin-bottom:18px}
+.bank-row{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bank-row:last-child{border:none}
+.bank-row-name{font-weight:500;color:var(--white)}
+.bank-row-rate{color:var(--muted);font-size:12px}
+.bank-row-monthly{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold);text-align:right}
+.bank-row-total{font-size:11px;color:var(--muted2);text-align:right}
+.bank-row.best{background:var(--gold-dim);border-radius:8px;padding:13px 10px;border:none;margin:4px -10px;border-bottom:none}
+.bank-best-badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;background:var(--gold);color:#0a0805;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+
+/* JOB LOSS */
+.jobloss-card{background:linear-gradient(135deg,#1f0d0d,#1a0a0a);border:1px solid rgba(192,90,90,0.25);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.jobloss-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:500;margin-bottom:16px}
+.jobloss-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(192,90,90,0.1);font-size:13px}
+.jobloss-row:last-child{border:none}
+.jobloss-label{color:var(--muted)}
+.jobloss-val{font-weight:500;color:var(--red)}
+.jobloss-val.white{color:var(--white)}
+.jobloss-tip{font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px;padding-top:14px;border-top:1px solid rgba(192,90,90,0.1)}
+.jobloss-tip strong{color:var(--white);font-weight:500}
+
+/* INFLATION */
+.inflation-card{background:linear-gradient(135deg,#0d1520,#0a1018);border:1px solid rgba(90,138,192,0.25);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.inflation-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:500;margin-bottom:16px}
+.inflation-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(90,138,192,0.1);font-size:13px}
+.inflation-row:last-child{border:none}
+.inflation-label{color:var(--muted)}
+.inflation-val{font-weight:500;color:#7ab3e0}
+.inflation-insight{font-size:13px;color:var(--muted);line-height:1.7;margin-top:14px;padding-top:14px;border-top:1px solid rgba(90,138,192,0.1)}
+.inflation-insight strong{color:var(--white);font-weight:500}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:480px){
+  .field-row{grid-template-columns:1fr}
+  .key-nums{grid-template-columns:1fr}
+  .gate-form{padding:24px 18px}
+  .bank-vs{grid-template-columns:1fr;gap:8px}
+  .bank-vs-mid{display:none}
+  .overpay-highlight{flex-direction:column;gap:10px}
+  .share-card{flex-direction:column}
+  .share-btns{width:100%}
+  .share-btn{flex:1;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="wrap">
+    <div class="gate-inner">
+      <div class="badge"><span class="badge-dot"></span> Besplatni alat · Kalkulator kredita</div>
+
+      <h1 class="gate-h">Što ti banka<br><em>ne govori</em></h1>
+
+      <p class="gate-sub">Saznaj koliko stvarno košta tvoj kredit i koliko novca možeš uštedjeti uz jednu pametnu odluku.</p>
+
+      <div class="promises">
+        <div class="promise">
+          <div class="promise-icon">🏦</div>
+          <div>Koliko od tvoje rate ide banci, a koliko tebi po godinama</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">😱</div>
+          <div>Ukupni iznos koji ćeš platiti za stan koji danas vrijedi X€</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">💡</div>
+          <div>Koliko štediš ako plaćaš 100€ više mjesečno</div>
+        </div>
+        <div class="promise">
+          <div class="promise-icon">📊</div>
+          <div>Usporedba: fiksna vs. varijabilna kamatna stopa kroz 25 godina</div>
+        </div>
+      </div>
+
+      <div class="gate-form">
+        <div class="gate-form-title">Dobij pristup kalkulatoru</div>
+        <div class="gate-form-sub">Unesi podatke i odmah otvara pristup. Bez spama.</div>
+
+        <div class="field-row">
+          <div class="fg">
+            <label>Ime</label>
+            <input type="text" id="g-name" placeholder="Tvoje ime" autocomplete="given-name">
+          </div>
+          <div class="fg">
+            <label>Email</label>
+            <input type="email" id="g-email" placeholder="tvoj@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <button class="btn-gold" onclick="unlock()">Otvori besplatni kalkulator →</button>
+        <div class="privacy">🔒 Nema dijeljenja podataka. Odjava kada želiš.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALC -->
+<div id="calc-screen">
+  <div class="wrap">
+    <div class="calc-header">
+      <h2 class="calc-title">Kalkulator <em>kredita</em></h2>
+      <p class="calc-sub">Unesi podatke i vidi što te zaista čeka</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Iznos i rok kredita</div>
+
+      <div class="slider-field">
+        <div class="slider-top">
+          <div>
+            <div class="slider-label">Iznos kredita</div>
+            <div class="slider-sub">Ukupni iznos koji tražiš od banke</div>
+          </div>
+          <div class="slider-val" id="v-loan">150.000 €</div>
+        </div>
+        <input type="range" id="s-loan" min="20000" max="600000" value="150000" step="5000" oninput="updateLoan()">
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-top">
+          <div>
+            <div class="slider-label">Rok otplate</div>
+            <div class="slider-sub">Broj godina otplate kredita</div>
+          </div>
+          <div class="slider-val" id="v-years">25 god.</div>
+        </div>
+        <input type="range" id="s-years" min="5" max="30" value="25" step="1" oninput="updateYears()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Vrsta kamatne stope</div>
+      <div class="type-tabs">
+        <div class="type-tab active" onclick="selectType(this,'fixed')">
+          <div class="type-tab-name">Fiksna</div>
+          <div class="type-tab-sub">Ista rata cijelo vrijeme</div>
+        </div>
+        <div class="type-tab" onclick="selectType(this,'variable')">
+          <div class="type-tab-name">Varijabilna</div>
+          <div class="type-tab-sub">Prati tržišne promjene</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="slider-field">
+          <div class="slider-top">
+            <div>
+              <div class="slider-label" id="rate-label">Fiksna kamatna stopa</div>
+              <div class="slider-sub">Trenutne stope u HR: 2.8% – 3.5%</div>
+            </div>
+            <div class="slider-val" id="v-rate">3.0%</div>
+          </div>
+          <input type="range" id="s-rate" min="1.5" max="6" value="3" step="0.1" oninput="updateRate()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dodatna otplata (opcija)</div>
+      <div class="slider-field">
+        <div class="slider-top">
+          <div>
+            <div class="slider-label">Dodatnih X€ mjesečno</div>
+            <div class="slider-sub">Koliko više možeš platiti svaki mjesec</div>
+          </div>
+          <div class="slider-val" id="v-extra">0 €</div>
+        </div>
+        <input type="range" id="s-extra" min="0" max="500" value="0" step="25" oninput="updateExtra()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Što ako izgubim posao?</div>
+      <div class="slider-field">
+        <div class="slider-top">
+          <div>
+            <div class="slider-label">Period nezaposlenosti</div>
+            <div class="slider-sub">Koliko mjeseci bez prihoda možeš izdržati?</div>
+          </div>
+          <div class="slider-val" id="v-jobless">0 mj.</div>
+        </div>
+        <input type="range" id="s-jobless" min="0" max="12" value="0" step="1" oninput="updateJobless()">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Prikaži što te stvarno čeka →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="wrap">
+
+    <div style="margin-bottom:32px;padding-top:48px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Tvoja analiza kredita</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,40px);font-weight:700;letter-spacing:-.5px">Stvarni <em style="color:var(--gold);font-style:normal">troškovi</em></h2>
+    </div>
+
+    <!-- SHOCK -->
+    <div class="shock-banner">
+      <div class="shock-top">
+        <div class="shock-icon">😱</div>
+        <div>
+          <div class="shock-label">Šokantna istina</div>
+          <div class="shock-title" id="shock-title">Za stan od 150.000€ platit ćeš 220.000€</div>
+        </div>
+      </div>
+      <div class="shock-sentence" id="shock-sentence"></div>
+    </div>
+
+    <!-- KEY NUMBERS -->
+    <div class="key-nums">
+      <div class="key-num">
+        <div class="kn-label">Mjesečna rata</div>
+        <div class="kn-val gold" id="kn-monthly"></div>
+        <div class="kn-sub">svaki mjesec, <span id="kn-years-sub">25 god.</span></div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Ukupno plaćeno</div>
+        <div class="kn-val red" id="kn-total"></div>
+        <div class="kn-sub">za cijeli rok kredita</div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Ukupne kamate</div>
+        <div class="kn-val red" id="kn-interest"></div>
+        <div class="kn-sub">čisti prihod banke</div>
+      </div>
+      <div class="key-num">
+        <div class="kn-label">Efektivna cijena stana</div>
+        <div class="kn-val white" id="kn-effective"></div>
+        <div class="kn-sub">što stvarno platiš</div>
+      </div>
+    </div>
+
+    <!-- OVERPAYMENT -->
+    <div class="overpay-highlight">
+      <div class="oh-icon">🏦</div>
+      <div>
+        <div class="oh-label">Višak koji ideš banci</div>
+        <div class="oh-val" id="oh-val"></div>
+        <div class="oh-sub" id="oh-sub">Za taj novac mogao si kupiti još X nekretnina</div>
+      </div>
+    </div>
+
+    <!-- BANK VS YOU -->
+    <div class="bank-card">
+      <div class="bank-title">Tko zarađuje na tvom kreditu</div>
+      <div class="bank-vs">
+        <div class="bank-side">
+          <div class="bank-side-label">Banka zarađuje</div>
+          <div class="bank-side-val red" id="bvs-bank"></div>
+          <div class="bank-side-sub">ukupne kamate</div>
+        </div>
+        <div class="bank-vs-mid">vs.</div>
+        <div class="bank-side">
+          <div class="bank-side-label">Tvoje vlasništvo</div>
+          <div class="bank-side-val green" id="bvs-you"></div>
+          <div class="bank-side-sub">iznos kredita</div>
+        </div>
+      </div>
+      <div class="bank-bar">
+        <div class="bank-bar-fill" id="bank-bar-fill" style="width:40%"></div>
+      </div>
+      <div class="bank-bar-labels">
+        <span>Kamate (banka)</span>
+        <span id="bank-bar-pct"></span>
+        <span>Glavnica (ti)</span>
+      </div>
+    </div>
+
+    <!-- EARLY PAYOFF -->
+    <div class="early-card" id="early-card" style="display:none">
+      <div class="early-title">Što donosi dodatnih <span id="extra-amount">100€</span> mjesečno</div>
+      <div class="early-row">
+        <span class="early-label">Bez dodatne otplate</span>
+        <span class="early-val" id="ep-without"></span>
+      </div>
+      <div class="early-row">
+        <span class="early-label">S dodatnom otplatom</span>
+        <span class="early-val" id="ep-with"></span>
+      </div>
+      <div class="early-row">
+        <span class="early-label">Ušteda na kamatama</span>
+        <span class="early-val" id="ep-saved"></span>
+      </div>
+      <div class="early-row">
+        <span class="early-label">Kredit otplaćen za</span>
+        <span class="early-val" id="ep-years"></span>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Glavnica vs. Kamate po godinama</div>
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-dot" style="background:#52a87c"></div>Glavnica</div>
+          <div class="leg"><div class="leg-dot" style="background:#c05a5a"></div>Kamate</div>
+        </div>
+      </div>
+      <canvas id="chart" height="220"></canvas>
+    </div>
+
+    <!-- COMPARISON -->
+    <div class="compare-card">
+      <div class="compare-title">Usporedba scenarija</div>
+      <div class="compare-row">
+        <span class="compare-label">Tvoj kredit (<span id="cmp-rate"></span>%, <span id="cmp-years"></span> god.)</span>
+        <span class="compare-val white" id="cmp-yours"></span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Da si uzeo kraći rok (15 god.)</span>
+        <span class="compare-val green" id="cmp-15"></span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Da je kamata bila 1% viša</span>
+        <span class="compare-val red" id="cmp-higher"></span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Da je kamata bila 1% niža</span>
+        <span class="compare-val green" id="cmp-lower"></span>
+      </div>
+    </div>
+
+    <!-- BANK COMPARISON -->
+    <div class="banks-card">
+      <div class="banks-title">Usporedba banaka za tvoj kredit</div>
+      <div class="banks-updated">Posljednje ažurirano: travanj 2026.</div>
+      <div id="banks-list"></div>
+    </div>
+
+    <!-- JOB LOSS -->
+    <div class="jobloss-card" id="jobloss-card" style="display:none">
+      <div class="jobloss-title">Što ako izgubim posao</div>
+      <div class="jobloss-row"><span class="jobloss-label">Period nezaposlenosti</span><span class="jobloss-val white" id="jl-months"></span></div>
+      <div class="jobloss-row"><span class="jobloss-label">Propuštene rate ukupno</span><span class="jobloss-val" id="jl-missed"></span></div>
+      <div class="jobloss-row"><span class="jobloss-label">Kaznena kamata (13%/god)</span><span class="jobloss-val" id="jl-penalty"></span></div>
+      <div class="jobloss-row"><span class="jobloss-label">Ukupni dug nakon perioda</span><span class="jobloss-val" id="jl-total-debt"></span></div>
+      <div class="jobloss-row"><span class="jobloss-label">Povećanje duga</span><span class="jobloss-val" id="jl-increase"></span></div>
+      <div class="jobloss-tip" id="jl-tip"></div>
+    </div>
+
+    <!-- INFLATION -->
+    <div class="inflation-card">
+      <div class="inflation-title">Inflacijska korekcija</div>
+      <div class="inflation-row"><span class="inflation-label">Tvoja rata danas</span><span class="inflation-val" id="inf-today"></span></div>
+      <div class="inflation-row"><span class="inflation-label">Realna vrijednost rate za 10 god. (inflacija 3%)</span><span class="inflation-val" id="inf-10"></span></div>
+      <div class="inflation-row"><span class="inflation-label">Realna vrijednost rate za 20 god. (inflacija 3%)</span><span class="inflation-val" id="inf-20"></span></div>
+      <div class="inflation-row"><span class="inflation-label">Ukupna inflacijska ušteda kroz kredit</span><span class="inflation-val" id="inf-saving"></span></div>
+      <div class="inflation-insight" id="inf-insight"></div>
+    </div>
+
+    <!-- SHARE -->
+    <div class="share-card">
+      <div class="share-text">
+        <strong>Znaš nekoga tko razmišlja o kreditu?</strong><br>
+        Podijeli i možda mu uštediš tisuće eura.
+      </div>
+      <div class="share-btns">
+        <button class="share-btn wa" onclick="shareWA()">📱 WhatsApp</button>
+        <button class="share-btn" onclick="copyLink()">🔗 Kopiraj link</button>
+      </div>
+    </div>
+
+    <button class="recalc" onclick="resetAll()">← Promijeni podatke i izračunaj ponovno</button>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Link kopiran!</div>
+
+<script>
+let rateType = 'fixed';
+let chartInst = null;
+let userName = '';
+
+// GATE
+function unlock(){
+  const n=document.getElementById('g-name').value.trim();
+  const e=document.getElementById('g-email').value.trim();
+  if(!n){alert('Unesi svoje ime.');return}
+  if(!e||!e.includes('@')){alert('Unesi valjanu email adresu.');return}
+  userName=n;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('calc-screen').style.display='block';
+  window.scrollTo(0,0);
+}
+
+// SLIDERS
+function updateLoan(){
+  const v=parseInt(document.getElementById('s-loan').value);
+  document.getElementById('v-loan').textContent=v.toLocaleString('hr')+' €';
+}
+function updateYears(){
+  const v=parseInt(document.getElementById('s-years').value);
+  document.getElementById('v-years').textContent=v+' god.';
+}
+function updateRate(){
+  const v=parseFloat(document.getElementById('s-rate').value).toFixed(1);
+  document.getElementById('v-rate').textContent=v+'%';
+}
+function updateExtra(){
+  const v=parseInt(document.getElementById('s-extra').value);
+  document.getElementById('v-extra').textContent=v+' €';
+}
+
+function selectType(el,type){
+  document.querySelectorAll('.type-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  rateType=type;
+  const label=document.getElementById('rate-label');
+  const sub=el.nextElementSibling;
+  if(type==='fixed'){
+    label.textContent='Fiksna kamatna stopa';
+    document.querySelector('.slider-sub').textContent='Trenutne stope u HR: 2.8% – 3.5%';
+  } else {
+    label.textContent='Početna varijabilna stopa';
+    document.querySelector('.slider-sub').textContent='Može rasti – procijeni worst case scenario';
+  }
+}
+
+function updateJobless(){
+  const v=parseInt(document.getElementById('s-jobless').value);
+  document.getElementById('v-jobless').textContent=v===0?'0 mj.':v+' mj.';
+}
+
+// BANKS DATA
+const BANKS=[
+  {name:'Erste banka',   rate:2.99, note:'Fiksna 5 god., zatim NRS+1.9%'},
+  {name:'PBZ',           rate:3.09, note:'Fiksna do kraja roka'},
+  {name:'Zagrebačka banka', rate:3.18, note:'NRS+2.1%, promjenjiva'},
+  {name:'OTP banka',     rate:3.29, note:'Fiksna 3 god., zatim NRS+2.2%'},
+];
+
+function renderBanks(loan, years){
+  const list=document.getElementById('banks-list');
+  let html='';
+  let bestRate=Math.min(...BANKS.map(b=>b.rate));
+
+  BANKS.forEach(b=>{
+    const r=b.rate/100;
+    const mp=monthlyPayment(loan,r,years);
+    const total=mp*years*12;
+    const isBest=b.rate===bestRate;
+    html+=`
+      <div class="bank-row${isBest?' best':''}">
+        <div>
+          <div class="bank-row-name">${b.name} ${isBest?'<span class="bank-best-badge">Najbolja ponuda</span>':''}</div>
+          <div class="bank-row-rate">${b.rate.toFixed(2)}% · ${b.note}</div>
+        </div>
+        <div class="bank-row-monthly">${fmt(mp)}<small style="font-size:11px;color:var(--muted)">/mj</small></div>
+        <div class="bank-row-total">${fmt(total)}<br>ukupno</div>
+      </div>`;
+  });
+  list.innerHTML=html;
+}
+
+function calcJobLoss(loan, rate, monthly, joblessMonths){
+  if(joblessMonths===0) return;
+  const penaltyRate=0.13/12;
+  let balance=loan;
+  // simulate 12 months of normal payments first to get realistic balance
+  const r=rate/12;
+  for(let m=0;m<12;m++){
+    const interest=balance*r;
+    balance=balance+interest-monthly;
+  }
+  const missedPayments=monthly*joblessMonths;
+  const penaltyInterest=balance*penaltyRate*joblessMonths;
+  const newBalance=balance+penaltyInterest;
+  const increase=penaltyInterest;
+
+  document.getElementById('jl-months').textContent=joblessMonths+' mjeseci';
+  document.getElementById('jl-missed').textContent=fmt(missedPayments);
+  document.getElementById('jl-penalty').textContent=fmt(penaltyInterest);
+  document.getElementById('jl-total-debt').textContent=fmt(newBalance);
+  document.getElementById('jl-increase').textContent='+'+fmt(increase);
+
+  const tipText = joblessMonths<=3
+    ? `<strong>Savjet:</strong> Prvih 3 mjeseca banke najčešće nude moratorij, odnosno privremenu obustavu otplate bez kaznenih kamata. Odmah kontaktiraj banku pri prvom znaku poteškoća.`
+    : `<strong>Upozorenje:</strong> Nakon ${joblessMonths} mjeseci bez otplate, banka može pokrenuti ovršni postupak. Preporučujemo hitni kontakt s bankom i razmatranje refinanciranja ili prodaje nekretnine.`;
+  document.getElementById('jl-tip').innerHTML=tipText;
+  document.getElementById('jobloss-card').style.display='block';
+}
+
+function calcInflation(monthly, years, loan){
+  const inflation=0.03;
+  const real10=monthly/Math.pow(1+inflation,10);
+  const real20=monthly/Math.pow(1+inflation,Math.min(20,years));
+
+  // Total inflation saving = sum of (monthly - real_monthly) for each year
+  let totalSaving=0;
+  for(let y=1;y<=years;y++){
+    const realRate=monthly/Math.pow(1+inflation,y);
+    totalSaving+=(monthly-realRate)*12;
+  }
+
+  document.getElementById('inf-today').textContent=fmt(monthly)+'/mj';
+  document.getElementById('inf-10').textContent=fmt(real10)+'/mj';
+  document.getElementById('inf-20').textContent=fmt(real20)+'/mj';
+  document.getElementById('inf-saving').textContent=fmt(totalSaving);
+
+  document.getElementById('inf-insight').innerHTML=
+    `Banke ti nikad ne govore ovo: rata od <strong>${fmt(monthly)}</strong> danas za 15 godina vrijedi samo <strong>${fmt(monthly/Math.pow(1+inflation,15))}</strong> u realnoj kupovnoj moći. Dok plaćaš istu ratu u eurima, inflacija svake godine smanjuje njenu stvarnu vrijednost. To znači da je kredit s fiksnom ratom dugoročno <strong>sve jeftiniji</strong>, ne skuplji.`;
+}
+function fmt(n){return Math.round(n).toLocaleString('hr')+' €'}
+function fmtM(n){return Math.round(n).toLocaleString('hr')+' €/mj'}
+
+// MONTHLY PAYMENT
+function monthlyPayment(principal, annualRate, years){
+  const r=annualRate/12;
+  const n=years*12;
+  if(r===0) return principal/n;
+  return principal*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+}
+
+// PAYOFF WITH EXTRA
+function calcWithExtra(principal, annualRate, extra){
+  const r=annualRate/12;
+  const base=monthlyPayment(principal,annualRate,parseInt(document.getElementById('s-years').value));
+  let balance=principal, totalPaid=0, months=0;
+  while(balance>0 && months<360){
+    const interest=balance*r;
+    const payment=Math.min(base+extra, balance+interest);
+    balance=balance+interest-payment;
+    totalPaid+=payment;
+    months++;
+    if(balance<0.01) break;
+  }
+  return {months, totalPaid, totalInterest:totalPaid-principal};
+}
+
+// CALCULATE
+function calculate(){
+  const loan=parseInt(document.getElementById('s-loan').value);
+  const years=parseInt(document.getElementById('s-years').value);
+  const rate=parseFloat(document.getElementById('s-rate').value)/100;
+  const extra=parseInt(document.getElementById('s-extra').value);
+
+  const monthly=monthlyPayment(loan,rate,years);
+  const totalPaid=monthly*years*12;
+  const totalInterest=totalPaid-loan;
+  const interestPct=Math.round(totalInterest/totalPaid*100);
+
+  // Shock
+  document.getElementById('shock-title').textContent=
+    `Za kredit od ${fmt(loan)} ukupno ćeš platiti ${fmt(Math.round(totalPaid))}`;
+  document.getElementById('shock-sentence').innerHTML=
+    `${userName?userName+', t':'T'}voja banka ti <strong>ne govori</strong> da će od tvog kredita zaraditi <strong>${fmt(Math.round(totalInterest))}</strong> na kamatama. To je <strong>${Math.round(totalInterest/loan*100)}% više</strong> od iznosa koji si posudio. Prvih nekoliko godina otplaćuješ gotovo <strong>samo kamatu</strong>, ne stan.`;
+
+  // Key numbers
+  document.getElementById('kn-monthly').textContent=fmtM(monthly);
+  document.getElementById('kn-years-sub').textContent=years+' god.';
+  document.getElementById('kn-total').textContent=fmt(totalPaid);
+  document.getElementById('kn-interest').textContent=fmt(totalInterest);
+  document.getElementById('kn-effective').textContent=fmt(totalPaid);
+
+  // Overpay
+  const extraStans=Math.floor(totalInterest/100000);
+  document.getElementById('oh-val').textContent=fmt(totalInterest)+' bankama';
+  document.getElementById('oh-sub').textContent=
+    extraStans>0
+      ? `Za taj novac mogao si kupiti još ${extraStans} garsonjeru`
+      : `Više od ${Math.round(totalInterest/loan*100)}% iznosa kredita ide banci besplatno`;
+
+  // Bank vs you
+  document.getElementById('bvs-bank').textContent=fmt(totalInterest);
+  document.getElementById('bvs-you').textContent=fmt(loan);
+  document.getElementById('bank-bar-fill').style.width=interestPct+'%';
+  document.getElementById('bank-bar-pct').textContent=interestPct+'%';
+
+  // Early payoff
+  if(extra>0){
+    const withExtra=calcWithExtra(loan,rate,extra);
+    const withoutExtra={months:years*12,totalPaid,totalInterest};
+    const savedInterest=withoutExtra.totalInterest-withExtra.totalInterest;
+    const savedMonths=withoutExtra.months-withExtra.months;
+    const savedYears=Math.floor(savedMonths/12);
+    const savedMo=savedMonths%12;
+
+    document.getElementById('early-card').style.display='block';
+    document.getElementById('extra-amount').textContent=extra+'€';
+    document.getElementById('ep-without').textContent=years+' god. / '+fmt(totalPaid);
+    document.getElementById('ep-with').textContent=
+      Math.floor(withExtra.months/12)+' god. '+withExtra.months%12+' mj. / '+fmt(withExtra.totalPaid);
+    document.getElementById('ep-saved').textContent=fmt(savedInterest)+' manje bankama';
+    document.getElementById('ep-years').textContent=
+      (savedYears>0?savedYears+' god. ':'')+
+      (savedMo>0?savedMo+' mj. ':'')+
+      'ranije';
+  } else {
+    document.getElementById('early-card').style.display='none';
+  }
+
+  // Chart
+  drawChart(loan,rate,years);
+
+  // Comparison
+  const calc15=monthlyPayment(loan,rate,15)*15*12;
+  const calcHigher=monthlyPayment(loan,rate+0.01,years)*(years*12);
+  const calcLower=monthlyPayment(loan,rate-0.005,years)*(years*12);
+
+  document.getElementById('cmp-rate').textContent=(rate*100).toFixed(1);
+  document.getElementById('cmp-years').textContent=years;
+  document.getElementById('cmp-yours').textContent=fmt(totalPaid);
+  document.getElementById('cmp-15').textContent=fmt(calc15)+' (ušteda: '+fmt(totalPaid-calc15)+')';
+  document.getElementById('cmp-higher').textContent=fmt(calcHigher)+' (+'+fmt(calcHigher-totalPaid)+')';
+  document.getElementById('cmp-lower').textContent=fmt(calcLower)+' (ušteda: '+fmt(totalPaid-calcLower)+')';
+
+  // Bank comparison
+  renderBanks(loan, years);
+
+  // Job loss
+  const jobless=parseInt(document.getElementById('s-jobless').value);
+  calcJobLoss(loan, rate, monthly, jobless);
+
+  // Inflation
+  calcInflation(monthly, years, loan);
+
+  document.getElementById('calc-screen').style.display='none';
+  document.getElementById('results').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// CHART
+function drawChart(loan, annualRate, years){
+  const r=annualRate/12;
+  const monthly=monthlyPayment(loan,annualRate,years);
+  const labels=[], principalData=[], interestData=[];
+  let balance=loan;
+
+  for(let y=1;y<=years;y++){
+    let yearPrincipal=0, yearInterest=0;
+    for(let m=0;m<12;m++){
+      const interest=balance*r;
+      const principal=monthly-interest;
+      yearInterest+=interest;
+      yearPrincipal+=principal;
+      balance-=principal;
+      if(balance<0) balance=0;
+    }
+    labels.push('God. '+y);
+    principalData.push(Math.round(yearPrincipal));
+    interestData.push(Math.round(yearInterest));
+  }
+
+  const ctx=document.getElementById('chart').getContext('2d');
+  if(chartInst) chartInst.destroy();
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Glavnica',data:principalData,backgroundColor:'rgba(82,168,124,0.7)',borderRadius:2},
+        {label:'Kamate',data:interestData,backgroundColor:'rgba(192,90,90,0.7)',borderRadius:2}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1a1c1f',
+          borderColor:'#2e3035',
+          borderWidth:1,
+          titleColor:'#ede9e0',
+          bodyColor:'#6b6e75',
+          callbacks:{label:c=>' '+c.parsed.y.toLocaleString('hr')+' €'}
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'#1a1c1f'},ticks:{color:'#4a4d54',font:{size:10,family:'Outfit'},maxTicksLimit:10}},
+        y:{stacked:true,grid:{color:'#1a1c1f'},ticks:{color:'#4a4d54',font:{size:11,family:'Outfit'},callback:v=>(v/1000).toFixed(0)+'k €'}}
+      }
+    }
+  });
+}
+
+// SHARE
+function shareWA(){
+  const txt=encodeURIComponent('Pogledaj koliko te stvarno košta kredit 👇\n'+window.location.href);
+  window.open('https://wa.me/?text='+txt,'_blank');
+}
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    const t=document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2500);
+  });
+}
+
+function resetAll(){
+  document.getElementById('results').style.display='none';
+  document.getElementById('calc-screen').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

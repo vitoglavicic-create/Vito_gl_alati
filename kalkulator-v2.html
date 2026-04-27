@@ -346,6 +346,25 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.1)}
 .bc-val.g{color:var(--green)}
 .bc-val.w{color:var(--white)}
 
+/* DISCLAIMER */
+.disclaimer-card{
+  background:linear-gradient(135deg,rgba(200,169,110,0.04),rgba(0,0,0,0.2));
+  border:1px solid rgba(200,169,110,0.2);
+  border-radius:var(--r);padding:20px 22px;margin-bottom:14px;
+  position:relative;
+}
+.disclaimer-icon{
+  font-size:18px;margin-bottom:8px;
+}
+.disclaimer-title{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;font-weight:500;
+}
+.disclaimer-text{
+  font-size:12.5px;color:var(--muted);line-height:1.65;
+}
+.disclaimer-text strong{color:var(--white);font-weight:500;}
+
 /* CHART */
 .chart-card{
   background:var(--card);border:1px solid var(--border);
@@ -711,9 +730,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.1)}
       <div class="bc-title">Troškovi kupnje — detaljan pregled</div>
       <div class="bc-row"><span class="bc-label">Cijena nekretnine</span><span class="bc-val w" id="b-price"></span></div>
       <div class="bc-row"><span class="bc-label">Porez na promet (3%)</span><span class="bc-val r" id="b-tax"></span></div>
-      <div class="bc-row"><span class="bc-label">Javni bilježnik + uknjižba</span><span class="bc-val r">~1.500 €</span></div>
-      <div class="bc-row"><span class="bc-label">Agencijska provizija (2%)</span><span class="bc-val r" id="b-agency"></span></div>
-      <div class="bc-row"><span class="bc-label">Energetski certifikat</span><span class="bc-val r">~200 €</span></div>
+      <div class="bc-row"><span class="bc-label">Agencijska provizija (3%)</span><span class="bc-val r" id="b-agency"></span></div>
       <div class="bc-row"><span class="bc-label">Ukupni ulazni troškovi</span><span class="bc-val w" id="b-entry"></span></div>
       <div class="bc-row" style="margin-top:8px">
         <span class="bc-label">Tvoj polog</span><span class="bc-val g" id="b-savings"></span>
@@ -759,6 +776,17 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.1)}
       <canvas id="chart" height="200"></canvas>
     </div>
 
+    <!-- DISCLAIMER -->
+    <div class="disclaimer-card">
+      <div class="disclaimer-icon">⚖️</div>
+      <div class="disclaimer-title">Važna napomena</div>
+      <div class="disclaimer-text">
+        Ovaj kalkulator služi <strong>isključivo informativno</strong> i daje okvirnu procjenu temeljenu na prosječnim tržišnim podacima za odabrano područje. <strong>Nisam licencirani financijski savjetnik niti porezni stručnjak</strong> — moja ekspertiza je tržište nekretnina u Zagrebu i Istri.<br><br>
+        Stvarni troškovi, kamatne stope, porezna obveza i prinos ovise o tvojoj osobnoj situaciji, kreditnoj sposobnosti i uvjetima banke. Prije konačne odluke o kupnji ili kreditu obavezno konzultiraj <strong>banku, javnog bilježnika i poreznog savjetnika</strong>.<br><br>
+        Što ja radim: pomažem ti pronaći pravu nekretninu, procijeniti realnu tržišnu vrijednost i provesti te kroz cijeli proces kupnje. <strong>Brojevi su početak razgovora, ne kraj.</strong>
+      </div>
+    </div>
+
     <!-- SHARE -->
     <div class="share-card">
       <div class="share-text">
@@ -793,12 +821,12 @@ const LOC = {
 };
 
 // ═══ GATE ═══
-const WEBHOOK="https://script.google.com/macros/s/AKfycbzBh-BdazcU2n_nGYsu9KRVT3i7s152HqpXhI24iwMyD1uoISyBQMf20-BKPL5VlzS2Pg/exec";function saveToSheet(ime,email,alat){fetch(WEBHOOK,{method:"POST",body:JSON.stringify({ime,email,alat})}).catch(()=>{});}function unlock(){
+function unlock(){
   const n=document.getElementById('g-name').value.trim();
   const e=document.getElementById('g-email').value.trim();
   if(!n){alert('Unesi svoje ime.');return}
   if(!e||!e.includes('@')){alert('Unesi valjanu email adresu.');return}
-  userName=n;saveToSheet(n,e,"Najam vs Kupnja");
+  userName=n;
   document.getElementById('gate').style.display='none';
   document.getElementById('calc-screen').style.display='block';
   window.scrollTo(0,0);
@@ -876,10 +904,8 @@ function calculate(){
 
   // Entry costs
   const tax=propertyPrice*0.03;
-  const notary=1500;
-  const agency=propertyPrice*0.02;
-  const energy=200;
-  const entry=propertyPrice+tax+notary+agency+energy;
+  const agency=propertyPrice*0.03;
+  const entry=propertyPrice+tax+agency;
 
   // Loan
   const loan=Math.max(0,entry-savings);
